@@ -20,11 +20,28 @@
 <footer>Field Notes · A controlled local page for Page Runner</footer>
 <script>
   // The fixture has its own explicit activation; the extension action uses the same game file.
+  let loadingGame = false;
+  let cancelGame = false;
+  const gameFiles = ['world-backdrop.js', 'knight-sprite.js', 'game-objects.js', 'page-runner.js'];
+  function loadGameFile(index) {
+    const script = document.createElement('script');
+    script.src = `/extension/src/${gameFiles[index]}`;
+    script.onload = () => {
+      if (cancelGame) {
+        if (index === gameFiles.length - 1) globalThis.__pageRunnerInstance?.stop();
+        loadingGame = false;
+      } else if (index + 1 < gameFiles.length) loadGameFile(index + 1);
+      else loadingGame = false;
+    };
+    script.onerror = () => { loadingGame = false; };
+    document.head.appendChild(script);
+  }
   document.addEventListener('keydown', (event) => {
-    if (event.key.toLowerCase() === 'g' && !document.querySelector('#page-runner-overlay')) {
-      const script = document.createElement('script');
-      script.src = '/extension/src/page-runner.js';
-      document.head.appendChild(script);
+    if (event.key === 'Escape' && loadingGame) { cancelGame = true; return; }
+    if (event.key.toLowerCase() === 'g' && !loadingGame && !document.querySelector('#page-runner-overlay')) {
+      loadingGame = true;
+      cancelGame = false;
+      loadGameFile(0);
     }
   });
 </script>

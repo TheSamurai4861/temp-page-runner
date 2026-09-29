@@ -11,11 +11,28 @@
 <main><section><h2>One note</h2><p>Where page structure leaves a gap, the game can add a few temporary stepping stones.</p></section><section><h2>Another note</h2><p>These stones live only in the overlay.</p></section></main>
 <footer>End of journal</footer>
 <script>
+  let loadingGame = false;
+  let cancelGame = false;
+  const gameFiles = ['world-backdrop.js', 'knight-sprite.js', 'game-objects.js', 'page-runner.js'];
+  function loadGameFile(index) {
+    const script = document.createElement('script');
+    script.src = `/extension/src/${gameFiles[index]}`;
+    script.onload = () => {
+      if (cancelGame) {
+        if (index === gameFiles.length - 1) globalThis.__pageRunnerInstance?.stop();
+        loadingGame = false;
+      } else if (index + 1 < gameFiles.length) loadGameFile(index + 1);
+      else loadingGame = false;
+    };
+    script.onerror = () => { loadingGame = false; };
+    document.head.appendChild(script);
+  }
   document.addEventListener('keydown', (event) => {
-    if (event.key.toLowerCase() === 'g' && !document.querySelector('#page-runner-overlay')) {
-      const script = document.createElement('script');
-      script.src = '/extension/src/page-runner.js';
-      document.head.appendChild(script);
+    if (event.key === 'Escape' && loadingGame) { cancelGame = true; return; }
+    if (event.key.toLowerCase() === 'g' && !loadingGame && !document.querySelector('#page-runner-overlay')) {
+      loadingGame = true;
+      cancelGame = false;
+      loadGameFile(0);
     }
   });
 </script>

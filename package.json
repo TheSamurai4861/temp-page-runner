@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "check": "node --check extension/src/page-runner.js && node --check extension/background.js && node --check scripts/serve.mjs",
+    "check": "node --check extension/src/page-runner.js && node --check extension/src/world-backdrop.js && node --check extension/src/knight-sprite.js && node --check extension/src/game-objects.js && node --check extension/background.js && node --check scripts/serve.mjs",
     "serve": "node scripts/serve.mjs"
   }
 }

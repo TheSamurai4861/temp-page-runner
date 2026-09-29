@@ -8,8 +8,11 @@
 
   if (!document.body || document.querySelector('input[type="password"], input[autocomplete="cc-number"], form[action*="checkout" i]')) return;
 
-  const WIDTH = 14;
-  const HEIGHT = 20;
+  const knight = globalThis.__pageRunnerKnight;
+  const objects = globalThis.__pageRunnerObjects;
+  if (!knight || !objects || !globalThis.__pageRunnerWorld) return;
+  const WIDTH = knight.width;
+  const HEIGHT = knight.height;
   const SPEED = 250;
   const JUMP = 545;
   const GRAVITY = 1400;
@@ -30,6 +33,15 @@
   let completionTime = 0;
   let pageSize;
   let fallRespawns = 0;
+  let facingLeft = false;
+  let landUntil = 0;
+  let springUntil = 0;
+  let springCooldown = 0;
+  let bonusUntil = 0;
+  let spring;
+  let tablet;
+  let pickup;
+  let runeReady = false;
 
   const host = document.createElement("div");
   host.id = "page-runner-overlay";
@@ -38,13 +50,68 @@
   shadow.innerHTML = `<style>
     :host{all:initial} canvas{display:block;width:100vw;height:100vh;pointer-events:none}
     .hud{position:fixed;top:12px;left:12px;padding:8px 11px;background:#15191de8;color:#fff;font:12px/1.4 ui-monospace,monospace;border:2px solid #f5f4eb;box-shadow:3px 3px 0 #111;letter-spacing:.02em}
+    .power{color:#7ad9b2;font-weight:700}
     .win{display:none;position:fixed;left:50%;top:25%;transform:translateX(-50%);padding:13px 18px;background:#15191d;color:#fff;border:3px solid #7ad9b2;box-shadow:5px 5px 0 #111;font:600 17px ui-monospace,monospace;white-space:nowrap}
     .win.show{display:block}
-  </style><canvas aria-hidden="true"></canvas><div class="hud">PAGE RUNNER&nbsp; ← → / A D move&nbsp; ·&nbsp; Space jump&nbsp; ·&nbsp; R restart&nbsp; ·&nbsp; Esc exit</div><div class="win">FLAG FOUND ✦</div>`;
+  </style><canvas aria-hidden="true"></canvas><div class="hud">PAGE RUNNER&nbsp; ← → / A D move&nbsp; ·&nbsp; Space jump&nbsp; ·&nbsp; R restart&nbsp; ·&nbsp; Esc exit<span class="power"></span></div><div class="win">FLAG FOUND ✦</div>`;
   document.documentElement.appendChild(host);
   const canvas = shadow.querySelector("canvas");
   const ctx = canvas.getContext("2d");
   const win = shadow.querySelector(".win");
+  const power = shadow.querySelector(".power");
+  const worldSource = globalThis.chrome?.runtime?.getURL?.("assets/background.png") || "/input/background.png";
+  const worldRenderer = globalThis.__pageRunnerWorld?.createRenderer(worldSource);
+  let worldHost;
+  let worldCanvas;
+  let worldCtx;
+  let worldStyle;
+  const contrastNodes = [];
+  const contrastClass = `page-runner-world-contrast-${Math.random().toString(36).slice(2)}`;
+
+  function installWorld() {
+    if (!worldRenderer) return;
+    worldStyle = document.createElement("style");
+    worldStyle.id = "page-runner-world-style";
+    worldStyle.textContent = `html,body{background:transparent!important;background-image:none!important}
+      .${contrastClass}{color:#e9ece8!important;text-shadow:0 1px 2px #0b0e19!important}`;
+    const clearBackdrop = new WeakMap();
+    function hasClearBackdrop(node) {
+      if (!node || node === document.body || node === document.documentElement) return true;
+      if (clearBackdrop.has(node)) return clearBackdrop.get(node);
+      const style = getComputedStyle(node);
+      const alpha = Number(style.backgroundColor.match(/[\d.]+(?=\))/)?.[0] ?? 1);
+      const clear = style.backgroundImage === "none" &&
+        (style.backgroundColor === "transparent" || style.backgroundColor.startsWith("rgba(") && alpha < 0.4) &&
+        hasClearBackdrop(node.parentElement);
+      clearBackdrop.set(node, clear);
+      return clear;
+    }
+    const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_ELEMENT);
+    let scanned = 0;
+    let matched = 0;
+    while (scanned < 2500 && matched < 1200 && walker.nextNode()) {
+      const node = walker.currentNode;
+      scanned++;
+      if (!node.matches("h1,h2,h3,h4,h5,h6,p,a,small,span,li,label")) continue;
+      matched++;
+      if (node.closest("form,[contenteditable='true']") || !hasClearBackdrop(node)) continue;
+      const style = getComputedStyle(node);
+      if (style.visibility !== "visible" || style.display === "none") continue;
+      const rgb = style.color.match(/[\d.]+/g)?.slice(0, 3).map(Number);
+      if (!rgb || rgb[0] * 0.21 + rgb[1] * 0.72 + rgb[2] * 0.07 > 160) continue;
+      node.classList.add(contrastClass);
+      contrastNodes.push(node);
+    }
+    document.head.appendChild(worldStyle);
+    worldHost = document.createElement("div");
+    worldHost.id = "page-runner-world";
+    worldHost.style.cssText = "all:initial;position:fixed;inset:0;z-index:-1;pointer-events:none;display:block";
+    const worldShadow = worldHost.attachShadow({ mode: "open" });
+    worldShadow.innerHTML = '<style>canvas{display:block;width:100vw;height:100vh;image-rendering:pixelated;pointer-events:none}</style><canvas aria-hidden="true"></canvas>';
+    worldCanvas = worldShadow.querySelector("canvas");
+    worldCtx = worldCanvas.getContext("2d");
+    document.body.prepend(worldHost);
+  }
 
   function documentSize() {
     return {
@@ -75,7 +142,8 @@
       const box = el.getBoundingClientRect();
       const x = box.left + scrollX;
       const y = box.top + scrollY;
-      if (box.width < 65 || box.height < 16 || box.width > innerWidth * 0.8) continue;
+      const maxWidth = el.matches("section,article,[role='article'],.card") ? 0.95 : 0.8;
+      if (box.width < 65 || box.height < 16 || box.width > innerWidth * maxWidth) continue;
       if (box.height > Math.max(650, innerHeight * 1.2) || x < -10 || y < 35 || x > size.width || y > size.height) continue;
       if (isPinned(el.parentElement)) continue;
       candidates.push({ x, y, width: box.width, height: box.height, element: el, helper: false });
@@ -121,9 +189,19 @@
     goal = { x: current.x + Math.min(current.width - 24, Math.max(28, current.width * 0.65)), y: current.y - 40 };
     checkpoint = { ...start };
     player = { ...start, vx: 0, vy: 0, grounded: true };
+    const controls = "a,button,form,input,textarea,select,[contenteditable],[role='button'],[role='link'],[role='textbox']";
+    const safeSurface = (p) => p && !p.helper && p.element &&
+      !p.element.matches(controls) && !p.element.querySelector(controls);
+    const goalPlatform = current;
+    const springBase = safeSurface(route[1]) && route[1] !== goalPlatform ? route[1] : null;
+    const tabletBase = safeSurface(route[2]) && route[2] !== goalPlatform ? route[2] : null;
+    spring = springBase && !springBase.helper ? { x: springBase.x + Math.round(springBase.width * 0.56), y: springBase.y - 16, width: 32, height: 16, platform: springBase } : null;
+    tablet = tabletBase && !tabletBase.helper ? { x: tabletBase.x + Math.round(tabletBase.width * 0.55), y: tabletBase.y - 28, width: 20, height: 20, used: false } : null;
     host.dataset.domPlatforms = String(natural.length);
     host.dataset.helperPlatforms = String(helpers.length);
     host.dataset.routePlatforms = String(route.length);
+    host.dataset.spring = String(Boolean(spring));
+    host.dataset.tablet = String(Boolean(tablet));
   }
 
   function resize() {
@@ -132,6 +210,11 @@
     canvas.width = Math.round(innerWidth * scale);
     canvas.height = Math.round(innerHeight * scale);
     ctx.setTransform(scale, 0, 0, scale, 0, 0);
+    if (worldCanvas) {
+      worldCanvas.width = innerWidth;
+      worldCanvas.height = innerHeight;
+      worldRenderer.invalidate();
+    }
   }
 
   function respawn(fromStart = false) {
@@ -139,14 +222,28 @@
     if (!fromStart) host.dataset.fallRespawns = String(++fallRespawns);
     player = { ...where, vx: 0, vy: 0, grounded: true };
     if (fromStart) {
+      checkpoint = { ...start };
       completed = false;
       win.classList.remove("show");
+      if (tablet) tablet.used = false;
+      pickup = null;
+      runeReady = false;
+      springCooldown = 0;
+      springUntil = 0;
+      bonusUntil = 0;
+      landUntil = 0;
+      facingLeft = false;
     }
     window.scrollTo({ top: Math.max(0, player.y - innerHeight * 0.45), behavior: "instant" });
   }
 
   function editable(target) {
     return target instanceof Element && (target.isContentEditable || Boolean(target.closest("input,textarea,select,[role='textbox']")));
+  }
+
+  function onFocusIn(event) {
+    if (event.target instanceof Element &&
+      (editable(event.target) || event.target.closest("form,button,[role='button']"))) stop();
   }
 
   function onKeyDown(event) {
@@ -171,8 +268,10 @@
     const left = keys.has("arrowleft") || keys.has("a");
     const right = keys.has("arrowright") || keys.has("d");
     player.vx = (Number(right) - Number(left)) * SPEED;
+    if (player.vx) facingLeft = player.vx < 0;
     if (jumpBuffered > 0 && coyote > 0) {
-      player.vy = -JUMP;
+      player.vy = -JUMP * (runeReady ? 1.25 : 1);
+      runeReady = false;
       player.grounded = false;
       jumpBuffered = 0;
       coyote = 0;
@@ -190,11 +289,31 @@
         }
       }
       if (landing) {
+        if (player.vy > 100 && !player.grounded) landUntil = performance.now() + 150;
         player.y = landing.y - HEIGHT;
         player.vy = 0;
         player.grounded = true;
         checkpoint = { x: Math.max(landing.x + 5, Math.min(player.x, landing.x + landing.width - WIDTH - 5)), y: player.y };
+        if (spring && landing === spring.platform && performance.now() > springCooldown &&
+          player.x + WIDTH > spring.x + 4 && player.x < spring.x + spring.width - 4) {
+          player.vy = -JUMP * 1.2;
+          player.grounded = false;
+          coyote = 0;
+          springUntil = performance.now() + 240;
+          springCooldown = performance.now() + 550;
+        }
       }
+    }
+    if (tablet && !tablet.used && player.x < tablet.x + tablet.width && player.x + WIDTH > tablet.x &&
+      player.y < tablet.y + tablet.height && player.y + HEIGHT > tablet.y) {
+      tablet.used = true;
+      pickup = { x: tablet.x + 1, y: tablet.y - 25, width: 18, height: 24 };
+    }
+    if (pickup && player.x < pickup.x + pickup.width && player.x + WIDTH > pickup.x &&
+      player.y < pickup.y + pickup.height && player.y + HEIGHT > pickup.y) {
+      pickup = null;
+      runeReady = true;
+      bonusUntil = performance.now() + 350;
     }
     if (player.y > checkpoint.y + 590 || player.y > pageSize.height + 100) respawn();
     if (Math.abs(player.x + WIDTH / 2 - goal.x) < 25 && Math.abs(player.y + HEIGHT - (goal.y + 40)) < 48) {
@@ -210,10 +329,19 @@
     host.dataset.playerY = String(Math.round(player.y));
     host.dataset.grounded = String(player.grounded);
     host.dataset.completed = String(completed);
+    host.dataset.runeReady = String(runeReady);
+    host.dataset.tabletUsed = String(Boolean(tablet?.used));
+    host.dataset.pickupVisible = String(Boolean(pickup));
+    power.textContent = runeReady ? "  ·  RUNE READY" : "";
   }
 
   function pixelRect(x, y, w, h, color) { ctx.fillStyle = color; ctx.fillRect(Math.round(x), Math.round(y), w, h); }
   function draw() {
+    if (worldCtx) {
+      worldRenderer.draw(worldCtx, innerWidth, innerHeight, scrollX, scrollY, pageSize.width, pageSize.height);
+      host.dataset.worldReady = String(worldRenderer.ready);
+      host.dataset.worldZoom = worldRenderer.zoom.toFixed(3);
+    }
     ctx.clearRect(0, 0, innerWidth, innerHeight);
     for (const p of platforms) {
       const x = p.x - scrollX, y = p.y - scrollY;
@@ -227,6 +355,10 @@
         pixelRect(x + p.width - 7, y - 5, 7, 3, "#1d3d39");
       }
     }
+    const now = performance.now();
+    if (spring) objects.pad(ctx, spring.x - scrollX, spring.y - scrollY, now);
+    if (tablet) objects.tablet(ctx, tablet.x - scrollX, tablet.y - scrollY, tablet.used, now);
+    if (pickup) objects.rune(ctx, pickup.x - scrollX, pickup.y - scrollY + Math.sin(now / 180) * 2, now);
     const gx = goal.x - scrollX, gy = goal.y - scrollY;
     pixelRect(gx, gy, 3, 40, "#21333b");
     pixelRect(gx + 3, gy + 1, 21, 14, "#e4ac57");
@@ -234,17 +366,11 @@
     pixelRect(gx + 15, gy + 8, 5, 3, "#263844");
     pixelRect(gx - 5, gy + 39, 13, 3, "#21333b");
     const x = player.x - scrollX, y = player.y - scrollY;
-    const bounce = completed ? Math.round(Math.sin((performance.now() - completionTime) / 90) * 4) : 0;
-    pixelRect(x + 3, y + 1 + bounce, 8, 3, "#263844");
-    pixelRect(x + 1, y + 4 + bounce, 12, 10, "#f5f4eb");
-    pixelRect(x + 3, y + 6 + bounce, 2, 2, "#263844");
-    pixelRect(x + 9, y + 6 + bounce, 2, 2, "#263844");
-    pixelRect(x + 5, y + 10 + bounce, 4, 2, "#e4ac57");
-    pixelRect(x, y + 11 + bounce, 2, 5, "#57b89d");
-    pixelRect(x + 12, y + 11 + bounce, 2, 5, "#57b89d");
-    pixelRect(x + 2, y + 14 + bounce, 10, 3, "#263844");
-    pixelRect(x + 2, y + 17 + bounce, 3, 3, "#263844");
-    pixelRect(x + 9, y + 17 + bounce, 3, 3, "#263844");
+    const state = completed ? "win" : now < springUntil ? "spring" : now < bonusUntil ? "bonus" : !player.grounded ? player.vy < 0 ? "jump" : "fall" :
+      now < landUntil ? "land" : player.vx ? "run" : "idle";
+    host.dataset.spriteState = state;
+    const bounce = completed ? Math.round(Math.sin((now - completionTime) / 90) * 4) : 0;
+    knight.draw(ctx, x, y + bounce, state, now, facingLeft);
     if (completed) {
       for (let i = 0; i < 9; i++) {
         const angle = i * Math.PI * 2 / 9;
@@ -269,19 +395,26 @@
     cancelAnimationFrame(frame);
     window.removeEventListener("keydown", onKeyDown, true);
     window.removeEventListener("keyup", onKeyUp, true);
+    document.removeEventListener("focusin", onFocusIn, true);
     window.removeEventListener("blur", onBlur);
     window.removeEventListener("resize", resize);
     host.remove();
+    worldHost?.remove();
+    worldStyle?.remove();
+    for (const node of contrastNodes) node.classList.remove(contrastClass);
     if (globalThis.__pageRunnerInstance?.stop === stop) delete globalThis.__pageRunnerInstance;
   }
 
   pageSize = documentSize();
   buildRoute();
+  installWorld();
   resize();
   window.addEventListener("keydown", onKeyDown, true);
   window.addEventListener("keyup", onKeyUp, true);
+  document.addEventListener("focusin", onFocusIn, true);
   window.addEventListener("blur", onBlur);
   window.addEventListener("resize", resize);
   globalThis.__pageRunnerInstance = { stop };
-  frame = requestAnimationFrame(tick);
+  onFocusIn({ target: document.activeElement });
+  if (active) frame = requestAnimationFrame(tick);
 })();

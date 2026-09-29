@@ -4,6 +4,11 @@
   "version": "0.1.0",
   "description": "Turn the current page into a tiny local platform game.",
   "permissions": ["activeTab", "scripting"],
+  "web_accessible_resources": [{
+    "resources": ["assets/background.png"],
+    "matches": ["*://*/*"],
+    "use_dynamic_url": true
+  }],
   "action": { "default_title": "Toggle Page Runner" },
   "background": { "service_worker": "background.js" }
 }
