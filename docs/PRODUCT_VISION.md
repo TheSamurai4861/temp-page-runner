@@ -10,19 +10,20 @@ This is a local browser game, not a service. The primary product test is whether
 
 Aim for broad compatibility with ordinary pages the user explicitly activates. "Every site" is a design ambition, not a guarantee. Browser-restricted pages, authentication/payment flows, and inaccessible frames are excluded. Treat layout failures as observable compatibility cases, not silently successful levels. Keep the existing `activeTab` and `scripting` permission model until evidence shows a specific need for more access.
 
-Build coverage in steps: the two current fixtures; a small set of ordinary article, card, storefront, and documentation layouts without sensitive flows; then dynamic and long pages. Record the percentage of those pages that start, yield a traversable route, and cleanly exit. Do not declare universal support from fixture success.
+Build coverage in steps: the three current fixtures; a small set of ordinary article, card, storefront, and documentation layouts without sensitive flows; then dynamic and long pages. Record the percentage of those pages that start, yield a traversable route, and cleanly exit. Do not declare universal support from fixture success.
 
 ## Game grammar
 
 | Role | Page-derived input | Game behavior | Visual cue |
 |---|---|---|---|
-| Platform | Useful visible element top edge | Stand and jump from it | Thin mint edge |
+| Platform | Useful visible element top edge | Stand and jump from it | Mint rocky edge |
+| Generated ledge | Clear gap between DOM anchors | Physical step, bridge, or gap boundary | Small turquoise stone slab |
 | Spring | A small, isolated suitable surface selected sparingly | A stronger upward launch on landing | Compressing mint pad anchored to the element |
 | Bonus tile | A reachable opening near a selected element | Touch from below or side to release one reward once | Small rune tablet with an amber diamond, then a dim used state |
 | Reward | Overlay object released by a bonus tile | A short, clearly explained optional effect | Original knightly weapon or spell sprite |
 | Goal | A route endpoint supported by reachable geometry | Complete the run | Existing original flag, to be refined with the art direction |
 
-The actual page element remains untouched. The game may draw a pad or tile aligned with it, and collision stays in the game layer. Special elements are rare enough that the webpage still reads as a webpage. A page with little useful geometry may receive a minimal number of overlay helper platforms.
+The actual page element remains untouched. The generator builds a deterministic route around the DOM, adding at most two overlay ledges between anchors and validating jumps against the knight's physics. A side ledge can hold an optional rune while the main route remains power-free. The site remains visible, and special elements are rare enough that it still reads as a webpage.
 
 ## Character animation contract
 
@@ -30,11 +31,13 @@ The knight needs idle, run, jump, fall, land, spring launch, bonus reaction, and
 
 ## Current controlled slice
 
-On the staircase fixture, one real DOM card supports a small spring pad and a later card anchors a rune tablet. Touching the tablet releases an ascent rune; collecting it arms one boosted jump. The knight's movement states drive his pixel animation. The world layer replaces the page's root background during play, while page content remains visible. A narrow, temporary contrast treatment helps dark text on transparent areas. The normal route still reaches the flag without using specials.
+On the staircase fixture, the generated route crosses real cards and physical stone ledges. One card supports a spring beneath an optional side ledge with a rune tablet. Touching the tablet releases an ascent rune; collecting it arms one boosted jump. The knight's movement states drive his pixel animation. The world layer replaces the page's root background during play, while page content remains visible. A narrow, temporary contrast treatment helps dark text on transparent areas. The normal route still reaches the flag without using specials.
 
 ## Next slice
 
 Measure activation, readability, traversability, and clean exit on a small set of ordinary eligible pages beyond the fixtures. Fix observed failures one class at a time; do not infer universal site support from the controlled slice.
+
+Current compatibility limits: the extractor scans at most 2,500 candidate nodes and 180 usable rectangles, so distant content on exceptionally long or infinite pages may be missed. The generator now supports a deeper route on sufficiently long, structured pages, but the 45–90 second pacing target still needs measured play sessions. Dense full-width text documents can return an explicit no-route state. Frames, SPA navigation, complex transforms, and installed toolbar behavior on ordinary sites still need targeted browser checks.
 
 ## Product boundaries
 

@@ -10,7 +10,8 @@
 
   const knight = globalThis.__pageRunnerKnight;
   const objects = globalThis.__pageRunnerObjects;
-  if (!knight || !objects || !globalThis.__pageRunnerWorld) return;
+  const terrainEngine = globalThis.__pageRunnerTerrain;
+  if (!knight || !objects || !globalThis.__pageRunnerWorld || !terrainEngine) return;
   const PLAYER_SCALE = 4 / 3;
   const WIDTH = Math.round(knight.width * PLAYER_SCALE);
   const HEIGHT = Math.round(knight.height * PLAYER_SCALE);
@@ -43,6 +44,11 @@
   let tablet;
   let pickup;
   let runeReady = false;
+  let levelReady = false;
+  let terrainDirty = false;
+  let lastMutation = 0;
+  let terrainGeneration = 0;
+  let observer;
 
   const host = document.createElement("div");
   host.id = "page-runner-overlay";
@@ -128,7 +134,7 @@
 
   function extractPlatforms() {
     const size = documentSize();
-    const nodes = document.querySelectorAll("h1,h2,h3,h4,button,img,article,section,nav,footer,aside,li,main,[role='article'],.card");
+    const nodes = document.querySelectorAll("h1,h2,h3,h4,img,article,section,nav,footer,aside,li,main,[role='article'],.card");
     const candidates = [];
     const pinnedCache = new WeakMap();
     function isPinned(node) {
@@ -142,17 +148,28 @@
     for (let index = 0; index < Math.min(nodes.length, 2500); index++) {
       const el = nodes[index];
       if (host.contains(el) || el.isContentEditable || el.closest("form,[aria-hidden='true']")) continue;
+      if (el.querySelector("form,input,button,textarea,select,[contenteditable],[role='button'],[role='textbox']")) continue;
+      if (el.matches("nav,li") && el.querySelector("a,button,input,select,textarea,[role='button'],[role='link']")) continue;
       const style = getComputedStyle(el);
       if (style.display === "none" || style.visibility !== "visible" || Number(style.opacity) < 0.15) continue;
       if (style.position === "fixed" || style.position === "sticky" || style.transform !== "none") continue;
       const box = el.getBoundingClientRect();
-      const x = box.left + scrollX;
+      let x = box.left + scrollX;
       const y = box.top + scrollY;
       const maxWidth = el.matches("section,article,[role='article'],.card") ? 0.95 : 0.8;
-      if (box.width < 65 || box.height < 16 || box.width > innerWidth * maxWidth) continue;
+      let width = box.width;
+      if (width > innerWidth * maxWidth && el.matches("h1,h2,h3,h4,li")) {
+        const range = document.createRange();
+        range.selectNodeContents(el);
+        const textBox = range.getBoundingClientRect();
+        if (textBox.width >= 65 && textBox.width <= innerWidth * maxWidth) { x = textBox.left + scrollX; width = textBox.width; }
+      }
+      if (width < 65 || box.height < 16 || width > innerWidth * maxWidth) continue;
       if (box.height > Math.max(650, innerHeight * 1.2) || x < -10 || y < 35 || x > size.width || y > size.height) continue;
       if (isPinned(el.parentElement)) continue;
-      candidates.push({ x, y, width: box.width, height: box.height, element: el, helper: false });
+      const controls = "a,button,form,input,textarea,select,[contenteditable],[role='button'],[role='link'],[role='textbox']";
+      candidates.push({ x, y, width, height: box.height, element: el, helper: false,
+        safeSpecial: !el.matches(controls) && !el.querySelector(controls) });
     }
     candidates.sort((a, b) => a.y - b.y || b.width - a.width);
     const chosen = [];
@@ -167,47 +184,98 @@
     return chosen;
   }
 
-  function buildRoute() {
-    const natural = extractPlatforms();
-    const initial = natural.find((p) => p.y > scrollY + 85 && p.y < scrollY + innerHeight * 0.85 && p.x < scrollX + innerWidth * 0.7 && p.width < innerWidth * 0.65)
-      || natural.find((p) => p.y > scrollY + 50)
-      || { x: scrollX + 50, y: scrollY + Math.min(innerHeight * 0.55, 350), width: 140, height: 12, helper: true };
-    const selected = [initial];
-    const helpers = initial.helper ? [initial] : [];
-    let current = initial;
-    const targetY = initial.y + Math.min(950, Math.max(540, pageSize.height - initial.y - 100));
-    for (let step = 0; step < 5 && current.y < targetY - 120; step++) {
-      const options = natural.filter((p) => p.y >= current.y + 125 && p.y <= current.y + 300 && !selected.includes(p)
-        && p.x < current.x + current.width + 240 && p.x + p.width > current.x - 200);
-      options.sort((a, b) => Math.abs((a.y - current.y) - 205) - Math.abs((b.y - current.y) - 205));
-      let next = options[0];
-      if (!next) {
-        const x = Math.min(Math.max(24, current.x + Math.min(current.width, 160) + 28), Math.max(24, pageSize.width - 170));
-        next = { x, y: current.y + 190, width: 130, height: 12, helper: true };
-        helpers.push(next);
+  function occupiedRects() {
+    const nodes = document.querySelectorAll("h1,h2,h3,h4,h5,h6,p,a,button,form,input,textarea,select,img,article,section,nav,footer,aside,li,[role='article'],.card");
+    const boxes = [];
+    for (let index = 0; index < Math.min(nodes.length, 2500); index++) {
+      const node = nodes[index];
+      if (host.contains(node) || node.closest('[aria-hidden="true"]')) continue;
+      const style = getComputedStyle(node);
+      if (style.display === "none" || style.visibility !== "visible" || style.position === "fixed" || style.position === "sticky") continue;
+      let rect = node.getBoundingClientRect();
+      if (rect.width > innerWidth * 0.92 && node.matches("h1,h2,h3,h4,h5,h6,li,p")) {
+        const range = document.createRange();
+        range.selectNodeContents(node);
+        const textBox = range.getBoundingClientRect();
+        if (textBox.width <= innerWidth * 0.92) rect = textBox;
       }
-      selected.push(next);
-      current = next;
+      if (rect.width < 6 || rect.height < 6 || rect.width > innerWidth * 0.92 || rect.height > 420) continue;
+      boxes.push({ x: rect.left + scrollX, y: rect.top + scrollY, width: rect.width, height: rect.height });
     }
-    platforms = [...natural, ...helpers];
-    route = selected;
-    start = { x: initial.x + Math.min(28, initial.width / 3), y: initial.y - HEIGHT };
-    goal = { x: current.x + Math.min(current.width - 24, Math.max(28, current.width * 0.65)), y: current.y - 40 };
-    checkpoint = { ...start };
-    player = { ...start, vx: 0, vy: 0, grounded: true };
-    const controls = "a,button,form,input,textarea,select,[contenteditable],[role='button'],[role='link'],[role='textbox']";
-    const safeSurface = (p) => p && !p.helper && p.element &&
-      !p.element.matches(controls) && !p.element.querySelector(controls);
-    const goalPlatform = current;
-    const springBase = safeSurface(route[1]) && route[1] !== goalPlatform ? route[1] : null;
-    const tabletBase = safeSurface(route[2]) && route[2] !== goalPlatform ? route[2] : null;
-    spring = springBase && !springBase.helper ? { x: springBase.x + Math.round(springBase.width * 0.56), y: springBase.y - 16, width: 32, height: 16, platform: springBase } : null;
-    tablet = tabletBase && !tabletBase.helper ? { x: tabletBase.x + Math.round(tabletBase.width * 0.55), y: tabletBase.y - 28, width: 20, height: 20, used: false } : null;
-    host.dataset.domPlatforms = String(natural.length);
-    host.dataset.helperPlatforms = String(helpers.length);
-    host.dataset.routePlatforms = String(route.length);
+    return boxes;
+  }
+
+  function makePlan(from = null) {
+    const began = performance.now();
+    const plan = terrainEngine.generate({ anchors: extractPlatforms(), occupied: occupiedRects(),
+      page: { ...pageSize, scrollX, scrollY }, viewport: { width: innerWidth, height: innerHeight },
+      physics: { width: WIDTH, height: HEIGHT, speed: SPEED, jump: JUMP, gravity: GRAVITY }, startSurface: from });
+    host.dataset.terrainBuildMs = (performance.now() - began).toFixed(1);
+    return plan;
+  }
+
+  function setSpecials(plan) {
+    const base = plan.specials?.springSurface?.safeSpecial === false ? null : plan.specials?.springSurface;
+    const bonus = plan.specials?.tabletSurface;
+    spring = base ? { x: base.x + Math.round(base.width * 0.56), y: base.y - 16, width: 32, height: 16, platform: base } : null;
+    tablet = bonus ? { x: bonus.x + Math.round(bonus.width * 0.45), y: bonus.y - 28, width: 20, height: 20, used: false } : null;
     host.dataset.spring = String(Boolean(spring));
     host.dataset.tablet = String(Boolean(tablet));
+  }
+
+  function updateDiagnostics(plan) {
+    host.dataset.domPlatforms = String(plan.diagnostics.dom);
+    host.dataset.helperPlatforms = String(plan.diagnostics.generated);
+    host.dataset.routePlatforms = String(route.length);
+    host.dataset.terrainGeneration = String(++terrainGeneration);
+    host.dataset.terrainHops = String(plan.diagnostics.hops);
+    host.dataset.terrainRoute = route.map((p) => `${Math.round(p.x)},${Math.round(p.y)},${Math.round(p.width)}`).join("|");
+  }
+
+  function buildRoute() {
+    const plan = makePlan();
+    if (!plan.ok) { host.dataset.levelError = plan.reason; return false; }
+    platforms = plan.surfaces;
+    route = plan.route;
+    start = plan.start;
+    goal = plan.goal;
+    checkpoint = { ...start };
+    player = { ...start, vx: 0, vy: 0, grounded: true };
+    setSpecials(plan);
+    updateDiagnostics(plan);
+    levelReady = true;
+    return true;
+  }
+
+  function rebuildFuture(landing) {
+    pageSize = documentSize();
+    const plan = makePlan(landing);
+    terrainDirty = false;
+    const completedSurfaces = platforms.filter((p) => p.y <= landing.y + 1 || p === landing);
+    if (!plan.ok) {
+      platforms = completedSurfaces;
+      route = route.filter((p) => p.y <= landing.y + 1);
+      goal = null;
+      if (spring?.platform.y > landing.y) spring = null;
+      if (tablet && tablet.y + 28 > landing.y) { tablet = null; pickup = null; }
+      win.textContent = "NO PLAYABLE ROUTE · R RETRY · ESC EXIT";
+      win.classList.add("show");
+      host.dataset.terrainRebuild = plan.reason;
+      host.dataset.terrainRoute = route.map((p) => `${Math.round(p.x)},${Math.round(p.y)},${Math.round(p.width)}`).join("|");
+      return;
+    }
+    platforms = [...completedSurfaces, ...plan.surfaces.filter((p) => p.y > landing.y + 1)];
+    route = [...route.filter((p) => p.y <= landing.y + 1), ...plan.route.slice(1)];
+    goal = plan.goal;
+    if (spring?.platform.y > landing.y) spring = null;
+    if (tablet && tablet.y + 28 > landing.y) { tablet = null; pickup = null; }
+    if (plan.specials?.tabletSurface && plan.specials.tabletSurface.y > landing.y) setSpecials(plan);
+    win.textContent = "FLAG FOUND ✦";
+    win.classList.remove("show");
+    host.dataset.spring = String(Boolean(spring));
+    host.dataset.tablet = String(Boolean(tablet));
+    updateDiagnostics(plan);
+    host.dataset.terrainRebuild = "ok";
   }
 
   function resize() {
@@ -221,6 +289,7 @@
       worldCanvas.height = innerHeight;
       worldRenderer.invalidate();
     }
+    if (levelReady && observer) { terrainDirty = true; lastMutation = performance.now(); }
   }
 
   function respawn(fromStart = false) {
@@ -255,13 +324,16 @@
   function onKeyDown(event) {
     if (editable(event.target) || event.altKey || event.ctrlKey || event.metaKey) return;
     if (event.key === "Escape") { event.preventDefault(); stop(); return; }
+    if (!levelReady) return;
     const key = event.key.toLowerCase();
     if (["arrowleft", "arrowright", "arrowup", " ", "a", "d", "w", "r"].includes(key)) {
       event.preventDefault();
       event.stopPropagation();
       keys.add(key);
       if ([" ", "arrowup", "w"].includes(key) && !event.repeat) jumpBuffered = 0.13;
-      if (key === "r" && !event.repeat) respawn(true);
+      if (key === "r" && !event.repeat) {
+        if (goal || buildRoute()) respawn(true);
+      }
     }
   }
   function onKeyUp(event) { keys.delete(event.key.toLowerCase()); }
@@ -269,6 +341,7 @@
 
   function update(dt) {
     if (completed) return;
+    const wasGrounded = player.grounded;
     jumpBuffered = Math.max(0, jumpBuffered - dt);
     coyote = player.grounded ? 0.09 : Math.max(0, coyote - dt);
     const left = keys.has("arrowleft") || keys.has("a");
@@ -295,12 +368,13 @@
         }
       }
       if (landing) {
-        if (player.vy > 100 && !player.grounded) landUntil = performance.now() + 150;
+        if (player.vy > 100 && !wasGrounded) landUntil = performance.now() + 150;
         player.y = landing.y - HEIGHT;
         player.vy = 0;
         player.grounded = true;
         checkpoint = { x: Math.max(landing.x + 5, Math.min(player.x, landing.x + landing.width - WIDTH - 5)), y: player.y };
-        if (spring && landing === spring.platform && performance.now() > springCooldown &&
+        if (terrainDirty && performance.now() - lastMutation > 300) rebuildFuture(landing);
+        if (spring && !wasGrounded && landing === spring.platform && performance.now() > springCooldown &&
           player.x + WIDTH > spring.x + 4 && player.x < spring.x + spring.width - 4) {
           player.vy = -JUMP * 1.2;
           player.grounded = false;
@@ -322,7 +396,7 @@
       bonusUntil = performance.now() + 350;
     }
     if (player.y > checkpoint.y + 590 || player.y > pageSize.height + 100) respawn();
-    if (Math.abs(player.x + WIDTH / 2 - goal.x) < 25 && Math.abs(player.y + HEIGHT - (goal.y + 40)) < 48) {
+    if (goal && Math.abs(player.x + WIDTH / 2 - goal.x) < 25 && Math.abs(player.y + HEIGHT - (goal.y + 40)) < 48) {
       completed = true;
       completionTime = performance.now();
       win.classList.add("show");
@@ -351,26 +425,31 @@
     ctx.clearRect(0, 0, innerWidth, innerHeight);
     for (const p of platforms) {
       const x = p.x - scrollX, y = p.y - scrollY;
-      if (y < -20 || y > innerHeight + 20 || x > innerWidth || x + p.width < 0) continue;
-      pixelRect(x, y - 2, p.width, 3, p.helper ? "#e4ac57" : "#57b89d");
-      if (p.helper) {
-        pixelRect(x, y + 1, p.width, 9, "#263844");
-        for (let dot = 8; dot < p.width; dot += 18) pixelRect(x + dot, y + 4, 4, 3, "#e4ac57");
+      if (y < -30 || y > innerHeight + 30 || x > innerWidth || x + p.width < 0) continue;
+      pixelRect(x, y - 3, p.width, 4, p.bonus ? "#e7b562" : p.terrain ? "#67d5b5" : "#57b89d");
+      if (p.terrain) {
+        pixelRect(x, y + 1, p.width, 11, "#263844");
+        pixelRect(x + 6, y + 12, Math.max(8, p.width - 20), 4, "#192831");
+        for (let dot = 9; dot < p.width - 8; dot += 19) {
+          pixelRect(x + dot, y + 4, 7, 3, dot % 2 ? "#52676a" : "#e7b562");
+        }
       } else {
-        pixelRect(x, y - 5, 7, 3, "#1d3d39");
-        pixelRect(x + p.width - 7, y - 5, 7, 3, "#1d3d39");
+        pixelRect(x, y + 1, Math.min(p.width, 7), 6, "#1d3d39");
+        pixelRect(x + p.width - 7, y + 1, 7, 6, "#1d3d39");
       }
     }
     const now = performance.now();
     if (spring) objects.pad(ctx, spring.x - scrollX, spring.y - scrollY, now);
     if (tablet) objects.tablet(ctx, tablet.x - scrollX, tablet.y - scrollY, tablet.used, now);
     if (pickup) objects.rune(ctx, pickup.x - scrollX, pickup.y - scrollY + Math.sin(now / 180) * 2, now);
-    const gx = goal.x - scrollX, gy = goal.y - scrollY;
-    pixelRect(gx, gy, 3, 40, "#21333b");
-    pixelRect(gx + 3, gy + 1, 21, 14, "#e4ac57");
-    pixelRect(gx + 5, gy + 4, 8, 3, "#263844");
-    pixelRect(gx + 15, gy + 8, 5, 3, "#263844");
-    pixelRect(gx - 5, gy + 39, 13, 3, "#21333b");
+    if (goal) {
+      const gx = goal.x - scrollX, gy = goal.y - scrollY;
+      pixelRect(gx, gy, 3, 40, "#21333b");
+      pixelRect(gx + 3, gy + 1, 21, 14, "#e4ac57");
+      pixelRect(gx + 5, gy + 4, 8, 3, "#263844");
+      pixelRect(gx + 15, gy + 8, 5, 3, "#263844");
+      pixelRect(gx - 5, gy + 39, 13, 3, "#21333b");
+    }
     const x = player.x - scrollX, y = player.y - scrollY;
     const state = completed ? "win" : now < springUntil ? "spring" : now < bonusUntil ? "bonus" : !player.grounded ? player.vy < 0 ? "jump" : "fall" :
       now < landUntil ? "land" : player.vx ? "run" : "idle";
@@ -407,6 +486,7 @@
     document.removeEventListener("focusin", onFocusIn, true);
     window.removeEventListener("blur", onBlur);
     window.removeEventListener("resize", resize);
+    observer?.disconnect();
     host.remove();
     worldHost?.remove();
     worldStyle?.remove();
@@ -415,9 +495,22 @@
   }
 
   pageSize = documentSize();
-  buildRoute();
-  installWorld();
-  resize();
+  const routeReady = buildRoute();
+  if (routeReady) {
+    installWorld();
+    resize();
+    observer = new MutationObserver((records) => {
+      if (records.some((record) => record.target !== worldHost && !worldHost?.contains(record.target))) {
+        terrainDirty = true;
+        lastMutation = performance.now();
+      }
+    });
+    observer.observe(document.body, { subtree: true, childList: true, characterData: true,
+      attributes: true, attributeFilter: ["class", "style", "hidden"] });
+  } else {
+    win.textContent = "NO PLAYABLE ROUTE · ESC EXIT";
+    win.classList.add("show");
+  }
   window.addEventListener("keydown", onKeyDown, true);
   window.addEventListener("keyup", onKeyUp, true);
   document.addEventListener("focusin", onFocusIn, true);
@@ -425,5 +518,5 @@
   window.addEventListener("resize", resize);
   globalThis.__pageRunnerInstance = { stop };
   onFocusIn({ target: document.activeElement });
-  if (active) frame = requestAnimationFrame(tick);
+  if (active && routeReady) frame = requestAnimationFrame(tick);
 })();

@@ -13,7 +13,7 @@
 <script>
   let loadingGame = false;
   let cancelGame = false;
-  const gameFiles = ['world-backdrop.js', 'knight-sprite.js', 'game-objects.js', 'page-runner.js'];
+  const gameFiles = ['world-backdrop.js', 'knight-sprite.js', 'game-objects.js', 'terrain-generator.js', 'page-runner.js'];
   function loadGameFile(index) {
     const script = document.createElement('script');
     script.src = `/extension/src/${gameFiles[index]}`;

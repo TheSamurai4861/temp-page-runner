@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:,">
+<title>Archive grid — Page Runner fixture</title>
+<style>
+  *{box-sizing:border-box}body{margin:0;background:#f1f0ed;color:#263038;font:16px/1.5 system-ui,sans-serif}
+  header{padding:30px max(5vw,24px);border-bottom:1px solid #b8c2bf}h1{margin:0;font-size:28px}
+  main{max-width:1100px;margin:0 auto;min-height:1940px;padding:55px 30px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-auto-rows:230px;column-gap:55px;row-gap:75px;align-content:start}
+  article{width:min(100%,230px);min-height:125px;padding:17px;background:#fff;border:1px solid #b9c6c0;box-shadow:5px 5px 0 #dce1dc}
+  article:nth-child(3n+2){margin-top:75px}article:nth-child(3n){margin-top:135px}
+  article h2{margin:0 0 8px;font-size:17px}article p{margin:0;font-size:13px;color:#55635f}
+  footer{padding:30px 5vw;background:#e1e7e3}@media(max-width:760px){main{grid-template-columns:repeat(2,minmax(0,1fr));column-gap:18px}article:nth-child(n){margin-top:0}}
+</style>
+<header><h1>Archive of little places</h1><p>A dense grid with staggered cards and ordinary text.</p></header>
+<main>
+  <article><h2>North gate</h2><p>A short note among many entries.</p></article>
+  <article><h2>Watchtower</h2><p>Each card is still normal page content.</p></article>
+  <article><h2>Stone path</h2><p>Empty space between cards invites a route.</p></article>
+  <article><h2>Lantern</h2><p>The game should leave this text readable.</p></article>
+  <article><h2>Old map</h2><p>Different geometry changes the terrain.</p></article>
+  <article><h2>Bridge</h2><p>A ledge can exist only in the game layer.</p></article>
+  <article><h2>Courtyard</h2><p>Repeated structures test overlap filtering.</p></article>
+  <article><h2>Ruin</h2><p>The goal should have a safe approach.</p></article>
+  <article><h2>Last light</h2><p>Reach the flag by moving across the page.</p></article>
+  <article><h2>Water stair</h2><p>More entries extend the journey.</p></article>
+  <article><h2>Silent hall</h2><p>Every ledge has an approach.</p></article>
+  <article><h2>East arch</h2><p>The page continues below the first view.</p></article>
+  <article><h2>Grey well</h2><p>Open space can hold generated terrain.</p></article>
+  <article><h2>High window</h2><p>The route should stay readable.</p></article>
+  <article><h2>Moon court</h2><p>A final card waits farther down.</p></article>
+</main>
+<footer>Archive grid · A controlled local page for Page Runner</footer>
+<script>
+  let loadingGame=false, cancelGame=false;
+  const gameFiles=['world-backdrop.js','knight-sprite.js','game-objects.js','terrain-generator.js','page-runner.js'];
+  function loadGameFile(index){
+    const script=document.createElement('script');
+    script.src=`/extension/src/${gameFiles[index]}`;
+    script.onload=()=>{
+      if(cancelGame){if(index===gameFiles.length-1)globalThis.__pageRunnerInstance?.stop();loadingGame=false;}
+      else if(index+1<gameFiles.length)loadGameFile(index+1);
+      else loadingGame=false;
+    };
+    script.onerror=()=>{loadingGame=false;};
+    document.head.appendChild(script);
+  }
+  document.addEventListener('keydown',(event)=>{
+    if(event.key==='Escape'&&loadingGame){cancelGame=true;return;}
+    if(event.key.toLowerCase()==='g'&&!loadingGame&&!document.querySelector('#page-runner-overlay')){
+      loadingGame=true;cancelGame=false;loadGameFile(0);
+    }
+  });
+</script>
+<div style="position:fixed;right:12px;top:12px;padding:8px;background:#fff;border:1px solid #bdc7c0;font:12px system-ui">Press G to start Page Runner</div>
+</html>
