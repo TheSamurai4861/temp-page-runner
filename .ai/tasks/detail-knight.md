@@ -52,4 +52,4 @@ Extra pixels can reduce native-size legibility or obscure pose changes. The shie
 Visual review on both backgrounds found the helmet, scarf, buckler, tabard mark, gauntlet, and boots legible at the enlarged scale; the native sprite still reads primarily through silhouette. Frame comparison found no lost state variation. The character name and exact look remain a candidate for human judgment.
 
 ## Human acceptance
-- Accepted: No.
+- Accepted: The knight sprite direction was approved by the user on 2026-09-29.

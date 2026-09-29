@@ -64,4 +64,4 @@ Literal universal coverage is impossible on restricted pages; arbitrary DOM may 
 Independent review found three issues: the native-size background did not follow the contrast control, spring dimensions disagreed with the art notes, and the rune tablet looped back to active after its used frame. All three were corrected and checked in the browser. The independent reviewer rechecked those fixes and found no remaining issue in them. Review also confirmed the broad-coverage target is staged and does not claim restricted pages, the user-selected knight/weapon/spell direction is recorded, and the art is original and separate from the gameplay script.
 
 ## Human acceptance
-- Accepted: No.
+- Accepted: The sprite direction was approved by the user on 2026-09-29. Broader site-coverage claims remain unaccepted and unverified.
