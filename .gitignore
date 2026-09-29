@@ -1,5 +1,5 @@
 .playwright-cli/
 
-# The supplied source artwork is byte-identical to the packaged copy in
-# extension/assets/background.png, whose SHA-256 is recorded in docs/WORLD_DIRECTION.md.
-input/
+# Keep the supplied source image reproducible while ignoring other local inputs.
+input/*
+!input/background.png

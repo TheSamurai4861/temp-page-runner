@@ -48,7 +48,7 @@ Before a task can be considered complete, record relevant commands, checks, test
 
 Command: `npm run check`.
 
-This parses the game script, three local renderers, extension worker, and fixture server. It does not validate browser behavior.
+This parses the game script, three local renderers, extension worker, fixture server, and manifest JSON. It does not validate browser behavior.
 
 ## FULL verification
 

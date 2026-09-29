@@ -59,8 +59,9 @@
   const ctx = canvas.getContext("2d");
   const win = shadow.querySelector(".win");
   const power = shadow.querySelector(".power");
-  const worldSource = globalThis.chrome?.runtime?.getURL?.("assets/background.png") || "/input/background.png";
-  const worldRenderer = globalThis.__pageRunnerWorld?.createRenderer(worldSource);
+  const fixture = location.protocol === "http:" && ["127.0.0.1", "localhost"].includes(location.hostname) && location.port === "4173";
+  const worldSource = globalThis.chrome?.runtime?.getURL?.("assets/background.png") || (fixture ? "/input/background.png" : null);
+  const worldRenderer = worldSource && globalThis.__pageRunnerWorld?.createRenderer(worldSource);
   let worldHost;
   let worldCanvas;
   let worldCtx;

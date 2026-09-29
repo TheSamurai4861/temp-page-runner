@@ -11,7 +11,7 @@
 <script>
 (() => {
   const canvas=document.querySelector('#world'), viewport=document.querySelector('#viewport');
-  const renderer=globalThis.__pageRunnerWorld.createRenderer();
+  const renderer=globalThis.__pageRunnerWorld.createRenderer('/input/background.png');
   const x=document.querySelector('#x'), y=document.querySelector('#y');
   const xValue=document.querySelector('#x-value'), yValue=document.querySelector('#y-value');
   let advancing=false, last=0, cameraX=0, cameraY=0;

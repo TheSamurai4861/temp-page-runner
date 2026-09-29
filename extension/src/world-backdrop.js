@@ -1,7 +1,7 @@
 (() => {
   // Crop the supplied local artwork into the viewport. The crop follows document
   // progress and clamps to image bounds, so scrolling never reveals an edge.
-  function createRenderer(source = '/input/background.png') {
+  function createRenderer(source) {
     const artwork = new Image();
     artwork.decoding = 'async';
     artwork.src = source;
