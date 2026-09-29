@@ -1,0 +1,2 @@
+# The repository stores text as LF and lets Git handle platform checkouts.
+* text=auto eol=lf
