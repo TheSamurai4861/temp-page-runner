@@ -48,6 +48,7 @@
   let terrainDirty = false;
   let lastMutation = 0;
   let terrainGeneration = 0;
+  let cameraTargetY = null;
   let observer;
 
   const host = document.createElement("div");
@@ -309,7 +310,8 @@
       landUntil = 0;
       facingLeft = false;
     }
-    window.scrollTo({ top: Math.max(0, player.y - innerHeight * 0.45), behavior: "instant" });
+    cameraTargetY = Math.max(0, Math.min(pageSize.height - innerHeight, player.y - innerHeight * 0.45));
+    window.scrollTo({ top: cameraTargetY, behavior: "instant" });
   }
 
   function editable(target) {
@@ -403,7 +405,12 @@
     }
     const screenY = player.y - scrollY;
     if (screenY > innerHeight * 0.64 || screenY < innerHeight * 0.19) {
-      window.scrollTo({ top: Math.max(0, player.y - innerHeight * 0.44), behavior: "instant" });
+      cameraTargetY = Math.max(0, Math.min(pageSize.height - innerHeight, player.y - innerHeight * 0.44));
+    }
+    if (cameraTargetY !== null) cameraTargetY = Math.max(0, Math.min(cameraTargetY, pageSize.height - innerHeight));
+    if (cameraTargetY !== null && Math.abs(cameraTargetY - scrollY) > 0.5) {
+      const nextY = scrollY + (cameraTargetY - scrollY) * (1 - Math.exp(-8 * dt));
+      window.scrollTo({ top: nextY, behavior: "instant" });
     }
     host.dataset.playerX = String(Math.round(player.x));
     host.dataset.playerY = String(Math.round(player.y));
