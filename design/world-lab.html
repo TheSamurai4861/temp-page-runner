@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="fr">
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="icon" href="data:,">
+<title>Page Runner — monde dark fantasy</title>
+<style>
+  *{box-sizing:border-box}body{margin:0;background:#0b0e19;color:#f0eee9;font:14px/1.5 system-ui,sans-serif}header{padding:17px 22px;background:#101621;border-bottom:1px solid #566071;display:flex;align-items:center;gap:20px;flex-wrap:wrap}h1{font-size:18px;margin:0}p{margin:0;color:#b7bdc7}label{display:flex;align-items:center;gap:7px;font:12px ui-monospace,monospace}input{accent-color:#6dbea7}button{border:1px solid #81908b;background:#25383a;color:#fff;padding:7px 10px;cursor:pointer}.viewport{position:relative;height:calc(100vh - 105px);min-height:470px;overflow:hidden}canvas{display:block;width:100%;height:100%;image-rendering:pixelated}.sample{position:absolute;left:8%;top:30%;width:min(270px,30vw);padding:14px 16px;background:#e9ece8d9;color:#202a32;border:1px solid #8f9b9e;box-shadow:4px 5px 0 #10162199}.sample:nth-of-type(2){left:56%;top:55%}.sample h2{font-size:16px;margin:0 0 6px}.sample p{color:#344047;font-size:12px}.sample.hidden{display:none}.footnote{position:absolute;right:12px;bottom:12px;padding:6px 9px;background:#101621db;color:#e9ece8;font:11px ui-monospace,monospace}@media(max-width:620px){header{gap:8px}.sample{width:42vw;padding:8px}.sample:nth-of-type(2){left:52%}}
+</style>
+<header><div><h1>Les Marches des Brumes</h1><p>Image fournie · cadrage selon la page</p></div><label>Déplacement X <input id="x" type="range" min="0" max="6000" value="0"><output id="x-value">0</output></label><label>Déplacement Y <input id="y" type="range" min="0" max="6000" value="0"><output id="y-value">0</output></label><button id="advance">Avancer</button><button id="content">Masquer les cartes</button></header>
+<div class="viewport" id="viewport"><canvas id="world" aria-label="Paysage pixel dark fantasy"></canvas><article class="sample"><h2>Une vraie carte du site</h2><p>Le texte et les cartes restent visibles. Leur géométrie peut devenir une plateforme.</p></article><article class="sample"><h2>Plus loin sur la page</h2><p>Le cadrage descend dans l’image au fil du défilement, sans montrer son bord.</p></article><div class="footnote">IMAGE LOCALE · AUCUN SERVICE EXTERNE</div></div>
+<script src="/extension/src/world-backdrop.js"></script>
+<script>
+(() => {
+  const canvas=document.querySelector('#world'), viewport=document.querySelector('#viewport');
+  const renderer=globalThis.__pageRunnerWorld.createRenderer();
+  const x=document.querySelector('#x'), y=document.querySelector('#y');
+  const xValue=document.querySelector('#x-value'), yValue=document.querySelector('#y-value');
+  let advancing=false, last=0, cameraX=0, cameraY=0;
+  x.oninput=()=>{cameraX=Number(x.value);};
+  y.oninput=()=>{cameraY=Number(y.value);};
+  function draw(time) {
+    if (advancing && last) { cameraX+=(time-last)*0.08; cameraY+=(time-last)*0.045; }
+    last=time;
+    x.value=Math.min(6000,cameraX); y.value=Math.min(6000,cameraY);
+    xValue.value=Math.round(cameraX); yValue.value=Math.round(cameraY);
+    const width=viewport.clientWidth, height=viewport.clientHeight;
+    if (canvas.width!==width || canvas.height!==height) { canvas.width=width; canvas.height=height; }
+    renderer.draw(canvas.getContext('2d'),width,height,cameraX,cameraY,7000,7000);
+    requestAnimationFrame(draw);
+  }
+  document.querySelector('#advance').onclick=event=>{advancing=!advancing;event.currentTarget.textContent=advancing?'Pause':'Avancer';};
+  document.querySelector('#content').onclick=event=>{document.querySelectorAll('.sample').forEach(card=>card.classList.toggle('hidden'));event.currentTarget.textContent=document.querySelector('.sample').classList.contains('hidden')?'Afficher les cartes':'Masquer les cartes';};
+  requestAnimationFrame(draw);
+})();
+</script>
+</html>

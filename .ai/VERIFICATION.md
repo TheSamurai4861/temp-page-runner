@@ -48,19 +48,21 @@ Before a task can be considered complete, record relevant commands, checks, test
 
 Command: `npm run check`.
 
-This parses the game script, extension worker, and fixture server. It does not validate browser behavior.
+This parses the game script, three local renderers, extension worker, and fixture server. It does not validate browser behavior.
 
 ## FULL verification
 
 1. Run `npm run check`.
 2. Run `npm run serve` and open `http://127.0.0.1:4173/fixtures/staircase.html` in a headed desktop browser.
-3. Press G. Confirm original character, flag, recognizable page content, five DOM platforms, and zero helpers. The overlay host exposes `data-dom-platforms` and `data-helper-platforms` for diagnostics.
-4. Jump and observe player Y decrease, then return to the card top with `data-grounded="true"`.
-5. Move through the page. Confirm scroll position increases, touch the flag, and confirm the win card and `data-completed="true"`.
-6. Press R and confirm the player returns to the start and completion clears. Walk off the first card and confirm `data-fall-respawns` increases.
-7. Press Escape. Confirm the overlay is gone and ArrowDown scrolls normally.
-8. Open `/fixtures/sparse.html`, press G, and confirm overlay-only helper platforms appear while the page remains readable.
-9. Inspect `extension/manifest.json` and the game script for permission scope, storage, network calls, and page modifications.
-10. For sprite-design work, open `/design/sprite-lab.html` in a headed browser. Inspect every state at native size on both background modes, pause and step frames, and confirm no browser console errors. This lab is a design artifact, not proof of gameplay integration.
+3. Press G. Confirm the original knight and the supplied `input/background.png` behind readable page content, flag, five DOM platforms, zero helpers, one spring pad, and one rune tablet. The overlay host exposes platform counts, `data-world-ready`, and `data-world-zoom` for diagnostics.
+4. Jump and observe player Y decrease, then return to the card top with `data-grounded="true"`; inspect `data-sprite-state` for movement and air states.
+5. Land on the spring pad on card two. Confirm a stronger upward launch and `data-sprite-state="spring"`.
+6. Touch the rune tablet near card three. Confirm `data-tablet-used="true"` and `data-pickup-visible="true"`. Touch the rune and confirm `data-rune-ready="true"`; jump again and confirm it is consumed.
+7. Restart, then move through the page without the rune. Confirm scroll position increases, touch the flag, and confirm the win card and `data-completed="true"`.
+8. Press R and confirm the player returns to the start, the tablet re-arms, and completion clears. Walk off the first card and confirm `data-fall-respawns` increases.
+9. Press Escape. Confirm both overlay hosts, temporary style, and contrast classes are gone; the original body background and ArrowDown scrolling return.
+10. Open `/fixtures/sparse.html`, press G, and confirm overlay-only helper platforms appear while the page remains readable. Exit and confirm restoration.
+11. Inspect `extension/manifest.json` and the injected scripts for permission scope, storage, network calls, and page modifications.
+12. For art review, open `/design/sprite-lab.html` and `/design/world-lab.html` in a headed browser. Inspect native sprite states and the supplied image at top, deep, and narrow viewport crops. Compare the packaged PNG hash with `input/background.png`. These labs supplement, but do not replace, gameplay checks.
 
 A screenshot is needed for the visual claim. The extension action on a non-fixture page is a separate compatibility spot check. No formatter, linter, type checker, unit suite, benchmark, CI, or build step is configured. This is a known verification limit, not a passing result.

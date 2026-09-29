@@ -1,6 +1,6 @@
 # Sprite direction — knight candidate
 
-The user chose a knight and rewards from a world of weapons and spells. This is a first visual proposal for human review, not final art and not yet wired into the extension. Open `design/sprite-lab.html` through `npm run serve` to see the animation loops.
+The user approved this knight and the dark fantasy world direction. The knight's eight states are now wired to gameplay in `extension/src/knight-sprite.js`; the spring, rune tablet, and ascent rune have playable forms in `extension/src/game-objects.js`. The blade remains a design candidate. Open `design/sprite-lab.html` through `npm run serve` to inspect the original proposal and animation loops.
 
 ## Character
 
@@ -41,7 +41,7 @@ Animation changes pixels only. Physics and collisions remain authoritative. Left
 | Amber accent | `#e7b562` |
 | Warm highlight | `#fff6d8` |
 
-Keep the webpage visually dominant. The sprite and special objects should use accent colors only for action feedback and gameplay affordances.
+Keep the webpage content recognizable. The sprite and special objects use accent colors for action feedback and gameplay affordances against the darker game world.
 
 ## Review questions
 

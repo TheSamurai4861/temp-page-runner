@@ -2,7 +2,7 @@
 
 ## The promise
 
-Activate Page Runner on an ordinary webpage. The page remains recognizable, but its real structure becomes a compact platform level. A tiny original pixel knight runs and jumps across selected elements, uses occasional special surfaces, finds an original weapon or spell bonus, and reaches a flag.
+Activate Page Runner on an ordinary webpage. The page remains recognizable, but its real structure becomes a compact platform level against the user's dark fantasy pixel backdrop. A tiny original pixel knight runs and jumps across selected elements, uses occasional special surfaces, finds a spell bonus, and reaches a flag.
 
 This is a local browser game, not a service. The primary product test is whether a short clip makes the page-to-level idea immediately clear.
 
@@ -28,9 +28,13 @@ The actual page element remains untouched. The game may draw a pad or tile align
 
 The knight needs idle, run, jump, fall, land, spring launch, bonus reaction, and completion states distinguishable at native size. Short loops and one-shot poses are sufficient. Movement and collision drive the state; animation does not alter physics. The sprite uses a small fixed pixel grid and a restricted palette so it can be drawn sharply over varied pages. The candidate design lives in `docs/SPRITE_DIRECTION.md` and `design/sprite-lab.html`.
 
-## Next playable slice
+## Current controlled slice
 
-On one controlled page, classify one real DOM surface as a spring, anchor one rune tile to another, release one original spell pickup, and let the knight visibly gain one temporary traversal effect. A candidate first effect is one boosted jump; no combat system is required. Keep movement, landing, scrolling, reaching the flag, and exit working. Verify the ordinary page is still readable and the special surface is not needed to rescue a broken route. Only after this works should broader site compatibility be measured.
+On the staircase fixture, one real DOM card supports a small spring pad and a later card anchors a rune tablet. Touching the tablet releases an ascent rune; collecting it arms one boosted jump. The knight's movement states drive his pixel animation. The world layer replaces the page's root background during play, while page content remains visible. A narrow, temporary contrast treatment helps dark text on transparent areas. The normal route still reaches the flag without using specials.
+
+## Next slice
+
+Measure activation, readability, traversability, and clean exit on a small set of ordinary eligible pages beyond the fixtures. Fix observed failures one class at a time; do not infer universal site support from the controlled slice.
 
 ## Product boundaries
 
@@ -42,6 +46,6 @@ On one controlled page, classify one real DOM surface as a spring, anchor one ru
 
 ## Decisions still owned by the user
 
-- Final knight silhouette and name.
-- First weapon or spell effect.
-- How prominent special tiles should be in the visual hierarchy.
+- Final knight name.
+- The next spell or weapon effect after the current one-use boosted jump.
+- How prominent special tiles should be as compatibility expands.
