@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:,">
+<title>Field Notes — Page Runner fixture</title>
+<style>
+  *{box-sizing:border-box}body{margin:0;background:#f7f5ef;color:#222d32;font:16px/1.5 system-ui,sans-serif}header{padding:24px 7vw;border-bottom:1px solid #c7cac7}header small{color:#62716e;letter-spacing:.15em}h1{font-size:28px;margin:2px 0}nav{display:flex;gap:24px;padding:12px 7vw;border-bottom:1px solid #c7cac7;font-size:13px}nav a{color:#37594e;text-decoration:none}main{position:relative;min-height:1570px;max-width:1250px;margin:auto}.intro{position:absolute;top:40px;left:7vw;max-width:500px;color:#596761}.card{position:absolute;width:210px;min-height:126px;padding:15px 17px;background:#fff;border:1px solid #bdc7c0;box-shadow:5px 5px 0 #e5e5df}.card h2{font-size:17px;margin:0 0 9px}.card p{font-size:13px;margin:0;color:#596761}.card:nth-of-type(1){top:190px;left:7%}.card:nth-of-type(2){top:400px;left:39%}.card:nth-of-type(3){top:610px;left:43%}.card:nth-of-type(4){top:820px;left:61%}.card:nth-of-type(5){top:1030px;left:76%}footer{padding:30px 7vw;background:#e7ebe5;color:#455852}@media(max-width:800px){.card:nth-of-type(1){left:5%}.card:nth-of-type(2){left:40%}.card:nth-of-type(3){left:52%}.card:nth-of-type(4){left:34%}.card:nth-of-type(5){left:6%}}
+</style>
+<header><small>FIELD NOTES / ISSUE 04</small><h1>Paths through ordinary things</h1></header>
+<nav><a href="#one">Stories</a><a href="#three">Objects</a><a href="#five">About</a></nav>
+<main>
+  <p class="intro">A simple editorial page with cards staggered down the document. The cards are real page content and provide the game platforms.</p>
+  <article class="card" id="one"><h2>Small beginnings</h2><p>Every route begins somewhere. Take a closer look at the spaces between familiar objects.</p></article>
+  <article class="card" id="two"><h2>A little farther</h2><p>Move through a normal webpage one element at a time.</p></article>
+  <article class="card" id="three"><h2>Patterns emerge</h2><p>Geometry hides in layouts, cards, headings, and images.</p></article>
+  <article class="card" id="four"><h2>Beyond the fold</h2><p>The document continues, and the page can follow along.</p></article>
+  <article class="card" id="five"><h2>The far edge</h2><p>A destination can live on a real piece of page content.</p></article>
+</main>
+<footer>Field Notes · A controlled local page for Page Runner</footer>
+<script>
+  // The fixture has its own explicit activation; the extension action uses the same game file.
+  document.addEventListener('keydown', (event) => {
+    if (event.key.toLowerCase() === 'g' && !document.querySelector('#page-runner-overlay')) {
+      const script = document.createElement('script');
+      script.src = '/extension/src/page-runner.js';
+      document.head.appendChild(script);
+    }
+  });
+</script>
+<div style="position:fixed;right:12px;top:12px;padding:8px;background:#fff;border:1px solid #bdc7c0;font:12px system-ui">Press G to start Page Runner</div>
+</html>

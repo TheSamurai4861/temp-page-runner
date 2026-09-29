@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:,">
+<title>Sparse journal — Page Runner fixture</title>
+<style>
+  body{margin:0;background:#faf9f6;color:#20252a;font:17px/1.6 Georgia,serif}header,main,footer{max-width:780px;margin:auto;padding:35px 30px}h1{font-size:32px}section{margin:130px 0 450px;padding:25px;background:#eeeae0}footer{border-top:1px solid #bbb}
+</style>
+<header><h1>A sparse journal</h1><p>This page has wide spaces between useful surfaces.</p></header>
+<main><section><h2>One note</h2><p>Where page structure leaves a gap, the game can add a few temporary stepping stones.</p></section><section><h2>Another note</h2><p>These stones live only in the overlay.</p></section></main>
+<footer>End of journal</footer>
+<script>
+  document.addEventListener('keydown', (event) => {
+    if (event.key.toLowerCase() === 'g' && !document.querySelector('#page-runner-overlay')) {
+      const script = document.createElement('script');
+      script.src = '/extension/src/page-runner.js';
+      document.head.appendChild(script);
+    }
+  });
+</script>
+<div style="position:fixed;right:12px;top:12px;padding:8px;background:#fff;border:1px solid #bbb;font:12px system-ui">Press G to start Page Runner</div>
+</html>

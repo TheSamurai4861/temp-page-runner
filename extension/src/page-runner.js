@@ -1,0 +1,287 @@
+(() => {
+  const previous = globalThis.__pageRunnerInstance;
+  if (previous) {
+    previous.stop();
+    delete globalThis.__pageRunnerInstance;
+    return;
+  }
+
+  if (!document.body || document.querySelector('input[type="password"], input[autocomplete="cc-number"], form[action*="checkout" i]')) return;
+
+  const WIDTH = 14;
+  const HEIGHT = 20;
+  const SPEED = 250;
+  const JUMP = 545;
+  const GRAVITY = 1400;
+  const MAX_STEP = 1 / 30;
+  const keys = new Set();
+  let jumpBuffered = 0;
+  let coyote = 0;
+  let active = true;
+  let completed = false;
+  let lastTime = 0;
+  let frame = 0;
+  let platforms = [];
+  let route = [];
+  let goal;
+  let start;
+  let checkpoint;
+  let player;
+  let completionTime = 0;
+  let pageSize;
+  let fallRespawns = 0;
+
+  const host = document.createElement("div");
+  host.id = "page-runner-overlay";
+  host.style.cssText = "all:initial;position:fixed;inset:0;z-index:2147483647;pointer-events:none;display:block";
+  const shadow = host.attachShadow({ mode: "open" });
+  shadow.innerHTML = `<style>
+    :host{all:initial} canvas{display:block;width:100vw;height:100vh;pointer-events:none}
+    .hud{position:fixed;top:12px;left:12px;padding:8px 11px;background:#15191de8;color:#fff;font:12px/1.4 ui-monospace,monospace;border:2px solid #f5f4eb;box-shadow:3px 3px 0 #111;letter-spacing:.02em}
+    .win{display:none;position:fixed;left:50%;top:25%;transform:translateX(-50%);padding:13px 18px;background:#15191d;color:#fff;border:3px solid #7ad9b2;box-shadow:5px 5px 0 #111;font:600 17px ui-monospace,monospace;white-space:nowrap}
+    .win.show{display:block}
+  </style><canvas aria-hidden="true"></canvas><div class="hud">PAGE RUNNER&nbsp; ← → / A D move&nbsp; ·&nbsp; Space jump&nbsp; ·&nbsp; R restart&nbsp; ·&nbsp; Esc exit</div><div class="win">FLAG FOUND ✦</div>`;
+  document.documentElement.appendChild(host);
+  const canvas = shadow.querySelector("canvas");
+  const ctx = canvas.getContext("2d");
+  const win = shadow.querySelector(".win");
+
+  function documentSize() {
+    return {
+      width: Math.max(document.documentElement.scrollWidth, document.body.scrollWidth, innerWidth),
+      height: Math.max(document.documentElement.scrollHeight, document.body.scrollHeight, innerHeight)
+    };
+  }
+
+  function extractPlatforms() {
+    const size = documentSize();
+    const nodes = document.querySelectorAll("h1,h2,h3,h4,button,img,article,section,nav,footer,aside,li,main,[role='article'],.card");
+    const candidates = [];
+    const pinnedCache = new WeakMap();
+    function isPinned(node) {
+      if (!node || node === document.body) return false;
+      if (pinnedCache.has(node)) return pinnedCache.get(node);
+      const position = getComputedStyle(node).position;
+      const result = position === "fixed" || position === "sticky" || isPinned(node.parentElement);
+      pinnedCache.set(node, result);
+      return result;
+    }
+    for (let index = 0; index < Math.min(nodes.length, 2500); index++) {
+      const el = nodes[index];
+      if (host.contains(el) || el.isContentEditable || el.closest("form,[aria-hidden='true']")) continue;
+      const style = getComputedStyle(el);
+      if (style.display === "none" || style.visibility !== "visible" || Number(style.opacity) < 0.15) continue;
+      if (style.position === "fixed" || style.position === "sticky" || style.transform !== "none") continue;
+      const box = el.getBoundingClientRect();
+      const x = box.left + scrollX;
+      const y = box.top + scrollY;
+      if (box.width < 65 || box.height < 16 || box.width > innerWidth * 0.8) continue;
+      if (box.height > Math.max(650, innerHeight * 1.2) || x < -10 || y < 35 || x > size.width || y > size.height) continue;
+      if (isPinned(el.parentElement)) continue;
+      candidates.push({ x, y, width: box.width, height: box.height, element: el, helper: false });
+    }
+    candidates.sort((a, b) => a.y - b.y || b.width - a.width);
+    const chosen = [];
+    for (const candidate of candidates) {
+      const duplicate = chosen.some((other) => {
+        const horizontal = Math.max(0, Math.min(candidate.x + candidate.width, other.x + other.width) - Math.max(candidate.x, other.x));
+        return Math.abs(other.y - candidate.y) < 55 && horizontal / Math.min(candidate.width, other.width) > 0.65;
+      });
+      if (!duplicate) chosen.push(candidate);
+      if (chosen.length >= 180) break;
+    }
+    return chosen;
+  }
+
+  function buildRoute() {
+    const natural = extractPlatforms();
+    const initial = natural.find((p) => p.y > scrollY + 85 && p.y < scrollY + innerHeight * 0.85 && p.x < scrollX + innerWidth * 0.7 && p.width < innerWidth * 0.65)
+      || natural.find((p) => p.y > scrollY + 50)
+      || { x: scrollX + 50, y: scrollY + Math.min(innerHeight * 0.55, 350), width: 140, height: 12, helper: true };
+    const selected = [initial];
+    const helpers = initial.helper ? [initial] : [];
+    let current = initial;
+    const targetY = initial.y + Math.min(950, Math.max(540, pageSize.height - initial.y - 100));
+    for (let step = 0; step < 5 && current.y < targetY - 120; step++) {
+      const options = natural.filter((p) => p.y >= current.y + 125 && p.y <= current.y + 300 && !selected.includes(p)
+        && p.x < current.x + current.width + 240 && p.x + p.width > current.x - 200);
+      options.sort((a, b) => Math.abs((a.y - current.y) - 205) - Math.abs((b.y - current.y) - 205));
+      let next = options[0];
+      if (!next) {
+        const x = Math.min(Math.max(24, current.x + Math.min(current.width, 160) + 28), Math.max(24, pageSize.width - 170));
+        next = { x, y: current.y + 190, width: 130, height: 12, helper: true };
+        helpers.push(next);
+      }
+      selected.push(next);
+      current = next;
+    }
+    platforms = [...natural, ...helpers];
+    route = selected;
+    start = { x: initial.x + Math.min(28, initial.width / 3), y: initial.y - HEIGHT };
+    goal = { x: current.x + Math.min(current.width - 24, Math.max(28, current.width * 0.65)), y: current.y - 40 };
+    checkpoint = { ...start };
+    player = { ...start, vx: 0, vy: 0, grounded: true };
+    host.dataset.domPlatforms = String(natural.length);
+    host.dataset.helperPlatforms = String(helpers.length);
+    host.dataset.routePlatforms = String(route.length);
+  }
+
+  function resize() {
+    pageSize = documentSize();
+    const scale = Math.min(devicePixelRatio || 1, 2);
+    canvas.width = Math.round(innerWidth * scale);
+    canvas.height = Math.round(innerHeight * scale);
+    ctx.setTransform(scale, 0, 0, scale, 0, 0);
+  }
+
+  function respawn(fromStart = false) {
+    const where = fromStart ? start : checkpoint;
+    if (!fromStart) host.dataset.fallRespawns = String(++fallRespawns);
+    player = { ...where, vx: 0, vy: 0, grounded: true };
+    if (fromStart) {
+      completed = false;
+      win.classList.remove("show");
+    }
+    window.scrollTo({ top: Math.max(0, player.y - innerHeight * 0.45), behavior: "instant" });
+  }
+
+  function editable(target) {
+    return target instanceof Element && (target.isContentEditable || Boolean(target.closest("input,textarea,select,[role='textbox']")));
+  }
+
+  function onKeyDown(event) {
+    if (editable(event.target) || event.altKey || event.ctrlKey || event.metaKey) return;
+    if (event.key === "Escape") { event.preventDefault(); stop(); return; }
+    const key = event.key.toLowerCase();
+    if (["arrowleft", "arrowright", "arrowup", " ", "a", "d", "w", "r"].includes(key)) {
+      event.preventDefault();
+      event.stopPropagation();
+      keys.add(key);
+      if ([" ", "arrowup", "w"].includes(key) && !event.repeat) jumpBuffered = 0.13;
+      if (key === "r" && !event.repeat) respawn(true);
+    }
+  }
+  function onKeyUp(event) { keys.delete(event.key.toLowerCase()); }
+  function onBlur() { keys.clear(); }
+
+  function update(dt) {
+    if (completed) return;
+    jumpBuffered = Math.max(0, jumpBuffered - dt);
+    coyote = player.grounded ? 0.09 : Math.max(0, coyote - dt);
+    const left = keys.has("arrowleft") || keys.has("a");
+    const right = keys.has("arrowright") || keys.has("d");
+    player.vx = (Number(right) - Number(left)) * SPEED;
+    if (jumpBuffered > 0 && coyote > 0) {
+      player.vy = -JUMP;
+      player.grounded = false;
+      jumpBuffered = 0;
+      coyote = 0;
+    }
+    const oldBottom = player.y + HEIGHT;
+    player.x = Math.max(0, Math.min(pageSize.width - WIDTH, player.x + player.vx * dt));
+    player.vy = Math.min(900, player.vy + GRAVITY * dt);
+    player.y += player.vy * dt;
+    player.grounded = false;
+    if (player.vy >= 0) {
+      let landing = null;
+      for (const p of platforms) {
+        if (oldBottom <= p.y + 5 && player.y + HEIGHT >= p.y && player.x + WIDTH > p.x + 3 && player.x < p.x + p.width - 3) {
+          if (!landing || p.y < landing.y) landing = p;
+        }
+      }
+      if (landing) {
+        player.y = landing.y - HEIGHT;
+        player.vy = 0;
+        player.grounded = true;
+        checkpoint = { x: Math.max(landing.x + 5, Math.min(player.x, landing.x + landing.width - WIDTH - 5)), y: player.y };
+      }
+    }
+    if (player.y > checkpoint.y + 590 || player.y > pageSize.height + 100) respawn();
+    if (Math.abs(player.x + WIDTH / 2 - goal.x) < 25 && Math.abs(player.y + HEIGHT - (goal.y + 40)) < 48) {
+      completed = true;
+      completionTime = performance.now();
+      win.classList.add("show");
+    }
+    const screenY = player.y - scrollY;
+    if (screenY > innerHeight * 0.64 || screenY < innerHeight * 0.19) {
+      window.scrollTo({ top: Math.max(0, player.y - innerHeight * 0.44), behavior: "instant" });
+    }
+    host.dataset.playerX = String(Math.round(player.x));
+    host.dataset.playerY = String(Math.round(player.y));
+    host.dataset.grounded = String(player.grounded);
+    host.dataset.completed = String(completed);
+  }
+
+  function pixelRect(x, y, w, h, color) { ctx.fillStyle = color; ctx.fillRect(Math.round(x), Math.round(y), w, h); }
+  function draw() {
+    ctx.clearRect(0, 0, innerWidth, innerHeight);
+    for (const p of platforms) {
+      const x = p.x - scrollX, y = p.y - scrollY;
+      if (y < -20 || y > innerHeight + 20 || x > innerWidth || x + p.width < 0) continue;
+      pixelRect(x, y - 2, p.width, 3, p.helper ? "#e4ac57" : "#57b89d");
+      if (p.helper) {
+        pixelRect(x, y + 1, p.width, 9, "#263844");
+        for (let dot = 8; dot < p.width; dot += 18) pixelRect(x + dot, y + 4, 4, 3, "#e4ac57");
+      } else {
+        pixelRect(x, y - 5, 7, 3, "#1d3d39");
+        pixelRect(x + p.width - 7, y - 5, 7, 3, "#1d3d39");
+      }
+    }
+    const gx = goal.x - scrollX, gy = goal.y - scrollY;
+    pixelRect(gx, gy, 3, 40, "#21333b");
+    pixelRect(gx + 3, gy + 1, 21, 14, "#e4ac57");
+    pixelRect(gx + 5, gy + 4, 8, 3, "#263844");
+    pixelRect(gx + 15, gy + 8, 5, 3, "#263844");
+    pixelRect(gx - 5, gy + 39, 13, 3, "#21333b");
+    const x = player.x - scrollX, y = player.y - scrollY;
+    const bounce = completed ? Math.round(Math.sin((performance.now() - completionTime) / 90) * 4) : 0;
+    pixelRect(x + 3, y + 1 + bounce, 8, 3, "#263844");
+    pixelRect(x + 1, y + 4 + bounce, 12, 10, "#f5f4eb");
+    pixelRect(x + 3, y + 6 + bounce, 2, 2, "#263844");
+    pixelRect(x + 9, y + 6 + bounce, 2, 2, "#263844");
+    pixelRect(x + 5, y + 10 + bounce, 4, 2, "#e4ac57");
+    pixelRect(x, y + 11 + bounce, 2, 5, "#57b89d");
+    pixelRect(x + 12, y + 11 + bounce, 2, 5, "#57b89d");
+    pixelRect(x + 2, y + 14 + bounce, 10, 3, "#263844");
+    pixelRect(x + 2, y + 17 + bounce, 3, 3, "#263844");
+    pixelRect(x + 9, y + 17 + bounce, 3, 3, "#263844");
+    if (completed) {
+      for (let i = 0; i < 9; i++) {
+        const angle = i * Math.PI * 2 / 9;
+        const radius = 18 + Math.min(38, (performance.now() - completionTime) / 15);
+        pixelRect(x + 7 + Math.cos(angle) * radius, y + 8 + Math.sin(angle) * radius, 4, 4, i % 2 ? "#e4ac57" : "#57b89d");
+      }
+    }
+  }
+
+  function tick(time) {
+    if (!active) return;
+    const dt = Math.min(MAX_STEP, Math.max(0, (time - (lastTime || time)) / 1000));
+    lastTime = time;
+    update(dt);
+    draw();
+    frame = requestAnimationFrame(tick);
+  }
+
+  function stop() {
+    if (!active) return;
+    active = false;
+    cancelAnimationFrame(frame);
+    window.removeEventListener("keydown", onKeyDown, true);
+    window.removeEventListener("keyup", onKeyUp, true);
+    window.removeEventListener("blur", onBlur);
+    window.removeEventListener("resize", resize);
+    host.remove();
+    if (globalThis.__pageRunnerInstance?.stop === stop) delete globalThis.__pageRunnerInstance;
+  }
+
+  pageSize = documentSize();
+  buildRoute();
+  resize();
+  window.addEventListener("keydown", onKeyDown, true);
+  window.addEventListener("keyup", onKeyUp, true);
+  window.addEventListener("blur", onBlur);
+  window.addEventListener("resize", resize);
+  globalThis.__pageRunnerInstance = { stop };
+  frame = requestAnimationFrame(tick);
+})();

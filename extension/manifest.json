@@ -1,0 +1,9 @@
+{
+  "manifest_version": 3,
+  "name": "Page Runner",
+  "version": "0.1.0",
+  "description": "Turn the current page into a tiny local platform game.",
+  "permissions": ["activeTab", "scripting"],
+  "action": { "default_title": "Toggle Page Runner" },
+  "background": { "service_worker": "background.js" }
+}

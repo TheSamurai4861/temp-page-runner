@@ -1,0 +1,10 @@
+{
+  "name": "page-runner",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "check": "node --check extension/src/page-runner.js && node --check extension/background.js && node --check scripts/serve.mjs",
+    "serve": "node scripts/serve.mjs"
+  }
+}
