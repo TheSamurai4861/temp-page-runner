@@ -2,6 +2,8 @@
 
 Read [`.ai/METHOD.md`](.ai/METHOD.md) before significant work. It is the authoritative lifecycle and risk policy. Use [`.ai/SECURITY.md`](.ai/SECURITY.md) for sensitive actions and [`.ai/VERIFICATION.md`](.ai/VERIFICATION.md) for project checks. A matching file in [`.ai/workflows/`](.ai/workflows/) adds type-specific guidance; otherwise use the generic method.
 
+For Page Runner product work, read [`docs/PRODUCT_VISION.md`](docs/PRODUCT_VISION.md). Treat it as the current target direction; [`.ai/PROJECT_MAP.md`](.ai/PROJECT_MAP.md) records only observed implementation. The first-slice task in `.ai/tasks/` is historical evidence, not the current feature backlog.
+
 ## Invariants
 
 - Treat AI output as a candidate change. Human judgment owns consequential choices and final acceptance.

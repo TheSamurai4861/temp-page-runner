@@ -19,6 +19,8 @@ Page Runner is a local browser toy for people viewing ordinary web pages. It tur
 extension/         Manifest, action worker, and injected game script
 fixtures/          Two controlled ordinary-page layouts
 scripts/           Local fixture server
+design/            Standalone candidate sprite lab; not loaded by the extension
+docs/              Current product direction and sprite design notes
 .ai/               Engineering method, task evidence, and verification contract
 prompts/           Method prompts
 ```
@@ -31,12 +33,15 @@ prompts/           Method prompts
 | `extension/src/page-runner.js` | Scan DOM geometry; create overlay; run controls, physics, drawing, and cleanup |
 | `npm run serve` | Serve controlled fixtures locally |
 | Fixture G key | Explicitly inject the same game script for browser validation |
+| `design/sprite-lab.html` | Preview candidate knight and special-object animations |
 
 The worker calls `chrome.scripting.executeScript` after the user clicks the action. The injected script reads selected element boxes, derives a short route, and draws a fixed canvas inside a shadow root. Game state and collision geometry are ephemeral in the page. A small number of helper platforms may exist in the overlay when selected DOM platforms leave gaps. No state is persisted and no external service is called.
 
 ## Build and tests
 
 Run `npm run check` for JavaScript syntax. Run `npm run serve` and follow `.ai/VERIFICATION.md` for the browser flow. No bundler, CI pipeline, unit suite, or deployment process exists.
+
+The sprite lab is a separate design artifact. Its drawings are not yet used by the gameplay script.
 
 ## Sensitive boundary and constraints
 

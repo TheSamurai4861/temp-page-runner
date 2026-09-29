@@ -1,5 +1,7 @@
 # Page Runner: first playable slice
 
+Historical record of the initial slice. `docs/PRODUCT_VISION.md` now holds the expanded product direction.
+
 ## Intent
 Make the structure of an ordinary webpage feel like a small, immediately understandable platform game: a tiny original character crosses real page elements and reaches a flag.
 

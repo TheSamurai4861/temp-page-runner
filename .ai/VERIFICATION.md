@@ -61,5 +61,6 @@ This parses the game script, extension worker, and fixture server. It does not v
 7. Press Escape. Confirm the overlay is gone and ArrowDown scrolls normally.
 8. Open `/fixtures/sparse.html`, press G, and confirm overlay-only helper platforms appear while the page remains readable.
 9. Inspect `extension/manifest.json` and the game script for permission scope, storage, network calls, and page modifications.
+10. For sprite-design work, open `/design/sprite-lab.html` in a headed browser. Inspect every state at native size on both background modes, pause and step frames, and confirm no browser console errors. This lab is a design artifact, not proof of gameplay integration.
 
 A screenshot is needed for the visual claim. The extension action on a non-fixture page is a separate compatibility spot check. No formatter, linter, type checker, unit suite, benchmark, CI, or build step is configured. This is a known verification limit, not a passing result.
