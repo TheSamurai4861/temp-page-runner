@@ -6,7 +6,7 @@ The broader product direction, including spring surfaces, original bonus tiles, 
 
 ## Review the sprite direction
 
-Run `npm run serve`, then open `http://127.0.0.1:4173/design/sprite-lab.html`. The lab shows the candidate knight, its eight action states, and four special-object sprites. Pause, step frame by frame, mirror the knight, switch the preview background, and trigger the rune tile to inspect its persistent used state. The [sprite notes](docs/SPRITE_DIRECTION.md) record the pixel grid, palette, and proposed timing. This art has not yet been integrated into the extension.
+Run `npm run serve`, then open `http://127.0.0.1:4173/design/sprite-lab.html`. The lab shows a detailed candidate portrait, eight knight action states, and four special-object sprites. Pause, step frame by frame, mirror the knight, switch the preview background, and trigger the rune tile to inspect its persistent used state. The [sprite notes](docs/SPRITE_DIRECTION.md) record the character's equipment, pixel grid, palette, and proposed timing. This art has not yet been integrated into the extension.
 
 ## Run the controlled slice
 

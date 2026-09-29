@@ -6,7 +6,7 @@
 <title>Page Runner — atelier de sprites</title>
 <style>
   :root{color-scheme:dark;--ink:#202a32;--steel:#e9ece8;--shadow:#899ba0;--mint:#67d5b5;--amber:#e7b562;--paper:#fff6d8}
-  *{box-sizing:border-box}body{margin:0;background:#141a1f;color:#e9ece8;font:15px/1.5 system-ui,sans-serif}header,main,footer{max-width:1100px;margin:auto;padding:24px}header{padding-top:38px}h1{margin:0 0 8px;font-size:32px;letter-spacing:-.04em}h2{margin:0 0 8px;font-size:20px}p{margin:0;color:#b4c0c0}header p{max-width:680px}.eyebrow{color:var(--mint);text-transform:uppercase;font:700 12px/1.3 ui-monospace,monospace;letter-spacing:.18em;margin-bottom:10px}.controls{display:flex;flex-wrap:wrap;gap:9px;margin:24px 0 4px}button{background:#29343b;color:#fff;border:1px solid #6b807f;padding:8px 12px;font:600 13px ui-monospace,monospace;cursor:pointer}button:hover,button:focus-visible{border-color:var(--mint);outline:none}button[aria-pressed=true]{background:#275649;border-color:var(--mint)}section{margin:30px 0 42px}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px}.card{min-height:246px;background:#1c242a;border:1px solid #34444a;padding:17px;display:flex;flex-direction:column}.card h3{font:700 14px ui-monospace,monospace;margin:0}.meta{color:#8da39f;font:11px ui-monospace,monospace;margin-top:3px}.stage{position:relative;min-height:165px;display:flex;align-items:center;justify-content:center;gap:28px;margin:12px 0 8px;background-color:#263139;background-image:linear-gradient(45deg,#2d3b43 25%,transparent 25%),linear-gradient(-45deg,#2d3b43 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#2d3b43 75%),linear-gradient(-45deg,transparent 75%,#2d3b43 75%);background-size:24px 24px;background-position:0 0,0 12px,12px -12px,-12px 0}.stage.light{background:#e8e8df}.large{image-rendering:pixelated;image-rendering:crisp-edges;filter:drop-shadow(4px 5px 0 #1118)}.native{image-rendering:pixelated;border:1px solid #70827c;background:#263139;align-self:end;margin-bottom:22px}.stage.light .native{background:#e8e8df}.note{font-size:12px;color:#b4c0c0;margin-top:auto}.objects .card{min-height:220px}.tile-control{align-self:flex-start;margin-top:10px;font-size:11px;padding:5px 8px}footer{border-top:1px solid #34444a;color:#8da39f;font-size:12px;padding-bottom:45px}.swatches{display:flex;gap:5px;margin-top:18px}.swatches span{width:23px;height:23px;border:1px solid #ffffff66}@media(max-width:580px){header,main,footer{padding-left:16px;padding-right:16px}.grid{grid-template-columns:repeat(2,minmax(0,1fr))}.card{padding:11px}.stage{gap:12px}.large{max-width:90px;height:auto}}
+  *{box-sizing:border-box}body{margin:0;background:#141a1f;color:#e9ece8;font:15px/1.5 system-ui,sans-serif}header,main,footer{max-width:1100px;margin:auto;padding:24px}header{padding-top:38px}h1{margin:0 0 8px;font-size:32px;letter-spacing:-.04em}h2{margin:0 0 8px;font-size:20px}p{margin:0;color:#b4c0c0}header p{max-width:680px}.eyebrow{color:var(--mint);text-transform:uppercase;font:700 12px/1.3 ui-monospace,monospace;letter-spacing:.18em;margin-bottom:10px}.controls{display:flex;flex-wrap:wrap;gap:9px;margin:24px 0 4px}button{background:#29343b;color:#fff;border:1px solid #6b807f;padding:8px 12px;font:600 13px ui-monospace,monospace;cursor:pointer}button:hover,button:focus-visible{border-color:var(--mint);outline:none}button[aria-pressed=true]{background:#275649;border-color:var(--mint)}section{margin:30px 0 42px}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px}.profile{display:flex;align-items:center;gap:30px;padding:18px;background:#1c242a;border:1px solid #34444a}.profile-art{flex:none;width:216px;min-height:260px;display:grid;place-items:center;background:#263139}.profile-art.light{background:#e8e8df}#portrait{image-rendering:pixelated;image-rendering:crisp-edges;filter:drop-shadow(6px 7px 0 #1118)}.profile-copy{max-width:650px}.profile-copy p{margin:0 0 12px}.profile-copy strong{color:#fff6d8}.profile-copy ul{margin:0;padding-left:19px;color:#b4c0c0}.profile-copy li{margin:5px 0}.card{min-height:246px;background:#1c242a;border:1px solid #34444a;padding:17px;display:flex;flex-direction:column}.card h3{font:700 14px ui-monospace,monospace;margin:0}.meta{color:#8da39f;font:11px ui-monospace,monospace;margin-top:3px}.stage{position:relative;min-height:165px;display:flex;align-items:center;justify-content:center;gap:28px;margin:12px 0 8px;background-color:#263139;background-image:linear-gradient(45deg,#2d3b43 25%,transparent 25%),linear-gradient(-45deg,#2d3b43 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#2d3b43 75%),linear-gradient(-45deg,transparent 75%,#2d3b43 75%);background-size:24px 24px;background-position:0 0,0 12px,12px -12px,-12px 0}.stage.light{background:#e8e8df}.large{image-rendering:pixelated;image-rendering:crisp-edges;filter:drop-shadow(4px 5px 0 #1118)}.native{image-rendering:pixelated;border:1px solid #70827c;background:#263139;align-self:end;margin-bottom:22px}.stage.light .native{background:#e8e8df}.note{font-size:12px;color:#b4c0c0;margin-top:auto}.objects .card{min-height:220px}.tile-control{align-self:flex-start;margin-top:10px;font-size:11px;padding:5px 8px}footer{border-top:1px solid #34444a;color:#8da39f;font-size:12px;padding-bottom:45px}.swatches{display:flex;gap:5px;margin-top:18px}.swatches span{width:23px;height:23px;border:1px solid #ffffff66}@media(max-width:580px){header,main,footer{padding-left:16px;padding-right:16px}.grid{grid-template-columns:repeat(2,minmax(0,1fr))}.card{padding:11px}.stage{gap:12px}.large{max-width:90px;height:auto}.profile{display:block}.profile-art{width:100%;margin-bottom:16px}}
 </style>
 <header>
   <div class="eyebrow">Page Runner / direction artistique 01</div>
@@ -16,6 +16,7 @@
   <div class="swatches" aria-label="Palette"><span style="background:#202a32"></span><span style="background:#e9ece8"></span><span style="background:#899ba0"></span><span style="background:#67d5b5"></span><span style="background:#e7b562"></span><span style="background:#fff6d8"></span></div>
 </header>
 <main>
+  <section><h2>Le personnage</h2><div class="profile"><div class="profile-art" id="portrait-stage"><canvas id="portrait" width="180" height="240" aria-label="Portrait agrandi du chevalier"></canvas></div><div class="profile-copy"><div class="eyebrow">Nom provisoire · Le Veilleur des Marges</div><p>Un petit chevalier éclaireur qui traverse la structure des pages. Il est curieux et déterminé, avec un équipement léger conçu pour sauter avant de combattre.</p><ul><li><strong>Heaume :</strong> acier clair, arête centrale, visière sombre et rivets de cuivre.</li><li><strong>Signature :</strong> panache menthe asymétrique, écharpe ambre et losange sur le tabard.</li><li><strong>Équipement :</strong> petit écu à deux couleurs, gantelets, bottes renforcées.</li><li><strong>Gestuelle :</strong> prudence au repos, élan net en course, écu ouvert en chute, salut discret à la victoire.</li></ul></div></div></section>
   <section><h2>États du chevalier</h2><div class="grid" id="states"></div></section>
   <section class="objects"><h2>Objets du niveau</h2><div class="grid" id="objects"></div></section>
 </main>
@@ -54,14 +55,20 @@
     const crestX = state==='idle' ? [8,9,7][f] : state==='run' && f%2 ? 7 : 8;
     // Asymmetric crest and broad closed helmet establish the silhouette.
     r(c,crestX,headY-2,3,4,'K'); r(c,crestX+1,headY-2,2,3,'T');
+    r(c,crestX+3,headY-1,2,1,'T');
     r(c,3,headY+1,12,9,'K'); r(c,4,headY,10,2,'K');
     r(c,4,headY+2,10,4,'W'); r(c,3,headY+5,12,3,'S');
+    r(c,9,headY+2,1,3,'S'); r(c,4,headY+3,1,2,'H');
+    r(c,13,headY+3,1,1,'A'); r(c,4,headY+6,1,1,'A');
     r(c,5,headY+6,8,2,'K'); r(c,7,headY+6,3,1,'A');
+    r(c,11,headY+6,1,1,'H');
     r(c,5,headY+8,8,2,'K'); r(c,6,headY+8,6,1,'S');
     // Scarf and tabard use small warm/cool accents, never a costume pattern.
     r(c,5,bodyY,8,bodyH,'K'); r(c,6,bodyY+1,6,Math.max(3,bodyH-2),'W');
     r(c,5,bodyY,7,2,'A'); r(c,11,bodyY+1,3,2,'A');
-    r(c,8,bodyY+3,2,Math.max(2,bodyH-4),'T');
+    r(c,15,bodyY+2+(state==='run'?f%2:0),2,1,'A');
+    r(c,8,bodyY+3,2,2,'T'); r(c,7,bodyY+4,4,1,'T');
+    r(c,8,bodyY+5,2,1,'A');
     r(c,6,bodyY+bodyH-2,6,2,'S');
     let leftArm = {x:2,y:bodyY+1,h:5}, rightArm={x:13,y:bodyY+1,h:5};
     if (state==='run') { leftArm.y+=f%2?2:-1; rightArm.y+=f%2?-1:2; }
@@ -70,9 +77,11 @@
     if (state==='bonus' || state==='win') { rightArm={x:13,y:bodyY-3,h:6}; }
     r(c,leftArm.x,leftArm.y,3,leftArm.h,'K'); r(c,leftArm.x+1,leftArm.y+1,2,Math.max(1,leftArm.h-2),'S');
     r(c,rightArm.x,rightArm.y,3,rightArm.h,'K'); r(c,rightArm.x,rightArm.y+1,2,Math.max(1,rightArm.h-2),'S');
+    r(c,rightArm.x,rightArm.y+Math.max(1,rightArm.h-2),2,2,'W');
     const shieldX=Math.max(0,leftArm.x-1), shieldY=leftArm.y+2;
     r(c,shieldX,shieldY,4,5,'K'); r(c,shieldX+1,shieldY+1,2,3,'S');
-    r(c,shieldX+1,shieldY+2,2,1,'T'); r(c,shieldX+1,shieldY+5,2,1,'K');
+    r(c,shieldX+1,shieldY+2,1,1,'T'); r(c,shieldX+2,shieldY+3,1,1,'A');
+    r(c,shieldX+1,shieldY+5,2,1,'K');
     if (state==='jump') {
       r(c,4,19+f,4,3,'K'); r(c,10,19+f,4,3,'K'); r(c,3,21+f,5,2,'S'); r(c,10,21+f,5,2,'S');
     } else if (state==='run') {
@@ -85,6 +94,7 @@
       const legY=state==='fall'?19+f:18+bob;
       r(c,5,legY,3,5,'K'); r(c,10,legY,3,5,'K');
       r(c,4,22,4,2,'S'); r(c,10,22,4,2,'S');
+      r(c,4,22,1,1,'W'); r(c,13,22,1,1,'W');
     }
     if (state==='bonus') { r(c,15-f,5-f%2,2,2,'A'); r(c,13+f%2,3+f,2,2,'H'); }
     if (state==='win') {
@@ -158,17 +168,24 @@
       d.imageSmoothingEnabled=false; d.drawImage(tiny,0,0,dest.width,dest.height);
     }
   }
+  const portrait=document.querySelector('#portrait');
+  const portraitTiny=document.createElement('canvas'); portraitTiny.width=18; portraitTiny.height=24;
+  function renderPortrait() {
+    const c=portraitTiny.getContext('2d'); c.clearRect(0,0,18,24); knight(c,'idle',0);
+    const p=portrait.getContext('2d'); p.clearRect(0,0,180,240); p.imageSmoothingEnabled=false; p.drawImage(portraitTiny,0,0,180,240);
+  }
   function loop(time) {
     for (const item of cards) {
       const frame=item.id==='tablet' && tabletUsed ? 2 : playing ? Math.floor(time/item.ms)%(item.id==='tablet'?2:item.count) : manualFrame%(item.id==='tablet'?2:item.count);
       render(item,frame);
     }
+    renderPortrait();
     requestAnimationFrame(loop);
   }
   document.querySelector('#play').onclick=(event)=>{playing=!playing;event.currentTarget.textContent=playing?'⏸ Pause':'▶ Lecture';event.currentTarget.setAttribute('aria-pressed',String(playing));};
   document.querySelector('#step').onclick=()=>{playing=false;manualFrame++;document.querySelector('#play').textContent='▶ Lecture';document.querySelector('#play').setAttribute('aria-pressed','false');};
   document.querySelector('#face').onclick=()=>{facingLeft=!facingLeft;};
-  document.querySelector('#contrast').onclick=(event)=>{light=!light;document.querySelectorAll('.stage').forEach(stage=>stage.classList.toggle('light',light));event.currentTarget.textContent=light?'Fond sombre':'Fond clair';};
+  document.querySelector('#contrast').onclick=(event)=>{light=!light;document.querySelectorAll('.stage').forEach(stage=>stage.classList.toggle('light',light));document.querySelector('#portrait-stage').classList.toggle('light',light);event.currentTarget.textContent=light?'Fond sombre':'Fond clair';};
   requestAnimationFrame(loop);
 })();
 </script>

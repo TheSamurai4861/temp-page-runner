@@ -4,7 +4,11 @@ The user chose a knight and rewards from a world of weapons and spells. This is 
 
 ## Character
 
-A compact **18 × 24 pixel** knight with a closed pale-steel helmet, one narrow amber visor glint, a small asymmetric mint crest, a tiny shield, charcoal boots, and a short amber scarf. The silhouette is recognizable before the details: broad helmet, narrow torso, shield, and two separated boots. It has no cap, moustache, overalls, or other borrowed character cues.
+A compact **18 × 24 pixel** knight, provisionally called **Le Veilleur des Marges**. He is a small scout of webpage geometry: curious, cautious at rest, and quick to commit to a jump. The name and character story remain proposals for the user to accept or change.
+
+His broad pale-steel helmet has a central ridge, a closed dark visor, two small copper rivets, and one warm visor glint. An asymmetric mint crest bends behind it. An amber scarf peeks out on the right and moves with the running frames. The torso carries a mint diamond on a light tabard. A tiny two-tone buckler hangs from the left arm; the right hand has a pale gauntlet. Reinforced boots have a single light toe pixel. These marks give the character identity without filling every pixel.
+
+The silhouette must work before the details: helmet, narrow body, shield, separated boots. It has no cap, moustache, overalls, or other borrowed character cues. His movement personality is shown through the poses: shield guarded while idle, alternating gear during the run, shield lifted in a jump, arms spread in a fall, then a restrained blade salute on completion.
 
 | State | Frames | Timing | Motion cue |
 |---|---:|---:|---|
