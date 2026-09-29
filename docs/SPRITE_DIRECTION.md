@@ -4,7 +4,7 @@ The user approved this knight and the dark fantasy world direction. The knight's
 
 ## Character
 
-A compact **18 × 24 pixel** knight, provisionally called **Le Veilleur des Marges**. He is a small scout of webpage geometry: curious, cautious at rest, and quick to commit to a jump. The name and character story remain proposals for the user to accept or change.
+A compact **18 × 24 pixel** native drawing, shown at **24 × 32 pixels** in gameplay, provisionally called **Le Veilleur des Marges**. He is a small scout of webpage geometry: curious, cautious at rest, and quick to commit to a jump. The name and character story remain proposals for the user to accept or change.
 
 His broad pale-steel helmet has a central ridge, a closed dark visor, two small copper rivets, and one warm visor glint. An asymmetric mint crest bends behind it. An amber scarf peeks out on the right and moves with the running frames. The torso carries a mint diamond on a light tabard. A tiny two-tone buckler hangs from the left arm; the right hand has a pale gauntlet. Reinforced boots have a single light toe pixel. These marks give the character identity without filling every pixel.
 

@@ -11,8 +11,9 @@
   const knight = globalThis.__pageRunnerKnight;
   const objects = globalThis.__pageRunnerObjects;
   if (!knight || !objects || !globalThis.__pageRunnerWorld) return;
-  const WIDTH = knight.width;
-  const HEIGHT = knight.height;
+  const PLAYER_SCALE = 4 / 3;
+  const WIDTH = Math.round(knight.width * PLAYER_SCALE);
+  const HEIGHT = Math.round(knight.height * PLAYER_SCALE);
   const SPEED = 250;
   const JUMP = 545;
   const GRAVITY = 1400;
@@ -57,6 +58,10 @@
   document.documentElement.appendChild(host);
   const canvas = shadow.querySelector("canvas");
   const ctx = canvas.getContext("2d");
+  const spriteCanvas = document.createElement("canvas");
+  spriteCanvas.width = knight.width;
+  spriteCanvas.height = knight.height;
+  const spriteCtx = spriteCanvas.getContext("2d");
   const win = shadow.querySelector(".win");
   const power = shadow.querySelector(".power");
   const fixture = location.protocol === "http:" && ["127.0.0.1", "localhost"].includes(location.hostname) && location.port === "4173";
@@ -371,7 +376,10 @@
       now < landUntil ? "land" : player.vx ? "run" : "idle";
     host.dataset.spriteState = state;
     const bounce = completed ? Math.round(Math.sin((now - completionTime) / 90) * 4) : 0;
-    knight.draw(ctx, x, y + bounce, state, now, facingLeft);
+    spriteCtx.clearRect(0, 0, knight.width, knight.height);
+    knight.draw(spriteCtx, 0, 0, state, now, facingLeft);
+    ctx.imageSmoothingEnabled = false;
+    ctx.drawImage(spriteCanvas, Math.round(x), Math.round(y + bounce), WIDTH, HEIGHT);
     if (completed) {
       for (let i = 0; i < 9; i++) {
         const angle = i * Math.PI * 2 / 9;

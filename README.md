@@ -2,7 +2,7 @@
 
 A local browser toy that turns selected DOM surfaces into a tiny platform game. The page stays visible. Page geometry and game state remain in the browser; there are no runtime packages, accounts, storage, or external service calls from the extension.
 
-The broader product direction is in [the product vision](docs/PRODUCT_VISION.md). The current controlled slice includes the original animated knight, the supplied `input/background.png` framed behind the page, a spring pad, a rune tablet, and one optional empowered-jump reward.
+The broader product direction is in [the product vision](docs/PRODUCT_VISION.md). The current controlled slice includes the original animated knight displayed at 24 × 32 pixels, the supplied `input/background.png` framed behind the page, a spring pad, a rune tablet, and one optional empowered-jump reward.
 
 ## Review the world direction
 
